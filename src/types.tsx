@@ -4,5 +4,11 @@ type FriendProps = {
     lastMessage: string,
     src: string
 }
+type RegisterError = {
+    userName: string,
+    emailError: string,
+    passError: string,
+    confirmPassError: string
+}
 
-export type {FriendProps}
+export type {FriendProps, RegisterError}

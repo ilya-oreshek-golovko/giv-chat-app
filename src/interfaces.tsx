@@ -4,6 +4,12 @@ interface IFriend{
     img: string,
     id: number
 }
+interface IUser{
+    name: string,
+    friends : Array<number>,
+    profileImg: string,
+    email: string
+}
 
 
-export type {IFriend}
+export type {IFriend, IUser}

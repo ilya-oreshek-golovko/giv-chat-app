@@ -15,7 +15,6 @@ function App() {
   const [state, setState] = useState<AppState>();
 
   function authStateChanged(user : any){
-    console.log("Test GIV1");
     console.log(user);
     setState({currentUser: user});
   }

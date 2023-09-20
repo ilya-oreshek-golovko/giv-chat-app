@@ -1,7 +1,8 @@
 import {firebaseApp} from './firebase';
 import {signInWithEmailAndPassword, signOut, getAuth, sendPasswordResetEmail, createUserWithEmailAndPassword} from "firebase/auth";
-import { getFirestore, connectFirestoreEmulator } from "firebase/firestore";
-import {connectAuthEmulator } from "firebase/auth";
+import { getDatabase, ref as refDb, push, set, get, query, remove } from "firebase/database"
+import { IUser } from '../interfaces';
+import {getStorage, ref as refStore, uploadBytes} from 'firebase/storage';
 
 async function checkNetworkConnectivity() {
     return new Promise((resolve, reject) => {
@@ -54,3 +55,27 @@ export const sendPasswordReset = async (email : string) => {
       alert(err.message);
     }
 };
+
+// export const addUser = async ( user : IUser) => {
+//   try{
+//     const oRef = await push(
+//       ref(
+//         getDatabase(),
+//         `users/`
+//       )
+//     );
+//   }catch(error : any){
+//     return error.message;
+//   }
+// }
+
+export const uploadFileTest = (file : File) => {
+  const storage = getStorage();
+  const storageRef = refStore(storage, 'profile');
+
+  // 'file' comes from the Blob or File API
+  uploadBytes(storageRef, file).then((snapshot) => {
+    console.log('Uploaded a blob or file!');
+    console.log(snapshot);
+  });
+}
