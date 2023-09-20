@@ -5,7 +5,7 @@ type FriendProps = {
     src: string
 }
 type RegisterError = {
-    userName: string,
+    userNameError: string,
     emailError: string,
     passError: string,
     confirmPassError: string

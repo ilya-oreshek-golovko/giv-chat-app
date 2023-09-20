@@ -1,7 +1,7 @@
 import { SyntheticEvent, useRef, useState } from "react";
 import {logInWithEmailAndPassword} from '../firebase/auth';
 import { useNavigate, Link } from "react-router-dom";
-import { home, register } from '../routing';
+import { register as rRegister, start as rStart } from '../routing';
 export default function Login() {
   const email = useRef() as React.RefObject<HTMLInputElement>;
   const password = useRef() as React.RefObject<HTMLInputElement>;
@@ -48,7 +48,7 @@ export default function Login() {
       alert(`Error: ${result}`);
       return;
     }
-    navigation(home.replace(":key", email.current?.value!));
+    navigation(rStart);
   }
 
   return (
@@ -77,7 +77,7 @@ export default function Login() {
         </div>
         <input type="submit" value="Submit" className="auth-btn-submit"/>
         <p className="auth-footer-notice">
-            You don't have an account? <Link to={register} className="auth-nav-link">Register</Link>
+            You don't have an account? <Link to={rRegister} className="auth-nav-link">Register</Link>
         </p>
     </form>
   )

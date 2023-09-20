@@ -1,29 +1,11 @@
-import {firebaseApp} from './firebase';
-import {signInWithEmailAndPassword, signOut, getAuth, sendPasswordResetEmail, createUserWithEmailAndPassword} from "firebase/auth";
-import { getDatabase, ref as refDb, push, set, get, query, remove } from "firebase/database"
-import { IUser } from '../interfaces';
-import {getStorage, ref as refStore, uploadBytes} from 'firebase/storage';
-
-async function checkNetworkConnectivity() {
-    return new Promise((resolve, reject) => {
-      const xhr = new XMLHttpRequest();
-      xhr.addEventListener("error", () => reject("Network Error"));
-      xhr.addEventListener("timeout", () => reject("Request Timed Out"));
-      xhr.addEventListener("load", () => {
-        if (xhr.status >= 200 && xhr.status < 300) {
-          resolve(xhr.response);
-        } else {
-          reject(xhr.statusText);
-        }
-      });
-      xhr.open("GET", "https://www.google.com");
-      xhr.send();
-    });
-  }
+import {signInWithEmailAndPassword, signOut, createUserWithEmailAndPassword} from "firebase/auth";
+import { auth, db } from './firebase';
+import {push, ref, set, get, query} from 'firebase/database';
+import { IUser } from "../interfaces";
 
 export const logInWithEmailAndPassword = async (email : string, password : string) => {
     try {
-      const user = await signInWithEmailAndPassword(getAuth(firebaseApp), email, password);
+      const user = await signInWithEmailAndPassword(auth, email, password);
       return user;
     } catch (err  : any) {
       return err.message;
@@ -31,30 +13,40 @@ export const logInWithEmailAndPassword = async (email : string, password : strin
 };
 
 export const logout = () => {
-    signOut(getAuth(firebaseApp));
+    signOut(auth);
 };
 
 export const registerWithEmailAndPassword = async (email : string,  password : string) => {
     try {
-      const res = await createUserWithEmailAndPassword(getAuth(firebaseApp), email, password);
-      const user = res.user;
-      console.log(user);
-      return user;
+      const res = await createUserWithEmailAndPassword(auth, email, password);
+      console.log(res);
+      return res;
     } catch (err : any) {
       console.error(err);
       alert(err.message);
     }
 };
 
-export const sendPasswordReset = async (email : string) => {
-    try {
-      await sendPasswordResetEmail(getAuth(firebaseApp), email);
-      alert("Password reset link sent!");
-    } catch (err  : any) {
-      console.error(err);
-      alert(err.message);
-    }
-};
+export async function addUser(user : IUser){
+  const oRef = await push(
+    ref(db, "users")
+  );
+
+  await set(oRef, user);
+  // const oSnapshot = await get(query(oRef));
+
+  // return oSnapshot.val();
+}
+
+// export const sendPasswordReset = async (email : string) => {
+//     try {
+//       await sendPasswordResetEmail(auth, email);
+//       alert("Password reset link sent!");
+//     } catch (err  : any) {
+//       console.error(err);
+//       alert(err.message);
+//     }
+// };
 
 // export const addUser = async ( user : IUser) => {
 //   try{
@@ -69,13 +61,13 @@ export const sendPasswordReset = async (email : string) => {
 //   }
 // }
 
-export const uploadFileTest = (file : File) => {
-  const storage = getStorage();
-  const storageRef = refStore(storage, 'profile');
+// export const uploadFileTest = (file : File) => {
+//   const storage = getStorage();
+//   const storageRef = refStore(storage, 'profile');
 
-  // 'file' comes from the Blob or File API
-  uploadBytes(storageRef, file).then((snapshot) => {
-    console.log('Uploaded a blob or file!');
-    console.log(snapshot);
-  });
-}
+//   // 'file' comes from the Blob or File API
+//   uploadBytes(storageRef, file).then((snapshot) => {
+//     console.log('Uploaded a blob or file!');
+//     console.log(snapshot);
+//   });
+// }

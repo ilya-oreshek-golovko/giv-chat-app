@@ -1,29 +1,18 @@
-import { useEffect, useState } from "react";
+import { useContext } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import Register from "./pages/Register";
 import Login from "./pages/Login";
 import Home from "./pages/Home";
 import * as routing from './routing';
-import { getAuth, onAuthStateChanged } from "firebase/auth";
-import { firebaseApp } from "./firebase/firebase";
+import { AuthContext } from "./context/AuthContext";
+import { IChild } from "./interfaces";
 
 function App() {
-  type AppState ={
-    currentUser : any
-  }
-
-  const [state, setState] = useState<AppState>();
-
-  function authStateChanged(user : any){
-    console.log(user);
-    setState({currentUser: user});
-  }
-  useEffect(() => {
-    onAuthStateChanged(getAuth(firebaseApp), authStateChanged);
-  }, []);
+  
+  const currentUser = useContext(AuthContext);
 
   const ProtectedRoute = ({children} : {children : any}) => {
-    if(!state?.currentUser){
+    if(!currentUser){
       return <Navigate to={routing.login}/>
     }
 
@@ -39,7 +28,6 @@ function App() {
           </ProtectedRoute>} />
           <Route path={routing.register} element={<Register />} />
           <Route path={routing.login} element={<Login />} /> 
-          <Route path={routing.home} element={<Home />}/>
         </Route>
       </Routes>
     </div>
