@@ -8,7 +8,8 @@ type RegisterError = {
     userNameError: string,
     emailError: string,
     passError: string,
-    confirmPassError: string
+    confirmPassError: string,
+    profileImgErr : string
 }
 
 export type {FriendProps, RegisterError}

@@ -6,11 +6,14 @@ export const AuthContext = createContext<any>(null);
 
 export function AuthContextProvider({children} : {children : any}){
     const [currentUser, setCurrentUser] = useState<any>();
+    const [isLoading, setIsLoading] = useState<boolean>(true);
 
     useEffect(() => {
+        console.log("Test GIV");
         const unsub = onAuthStateChanged( auth, (user) => {
             setCurrentUser(user);
-            console.log(currentUser);
+            setIsLoading(false);
+            console.log(`user: ${user}`);
         });
 
         return () => {
@@ -20,7 +23,7 @@ export function AuthContextProvider({children} : {children : any}){
 
     return(
         <AuthContext.Provider value={currentUser}>
-            {children}
+            {isLoading ? <div className="app-loading-page">Loading...</div> : children}
         </AuthContext.Provider>
     );
 }

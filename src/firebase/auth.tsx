@@ -1,7 +1,8 @@
 import {signInWithEmailAndPassword, signOut, createUserWithEmailAndPassword} from "firebase/auth";
 import { auth, db } from './firebase';
-import {push, ref, set, get, query} from 'firebase/database';
+//import {push, ref, set, get, query} from 'firebase/database';
 import { IUser } from "../interfaces";
+import { addDoc, collection } from "firebase/firestore";
 
 export const logInWithEmailAndPassword = async (email : string, password : string) => {
     try {
@@ -28,14 +29,7 @@ export const registerWithEmailAndPassword = async (email : string,  password : s
 };
 
 export async function addUser(user : IUser){
-  const oRef = await push(
-    ref(db, "users")
-  );
-
-  await set(oRef, user);
-  // const oSnapshot = await get(query(oRef));
-
-  // return oSnapshot.val();
+  await addDoc(collection(db, "users"), user);
 }
 
 // export const sendPasswordReset = async (email : string) => {

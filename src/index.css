@@ -53,7 +53,16 @@ h1,h2,h3,h4,h5,h6{
   justify-content: center;
   align-items: center;
 }
-
+.app-loading-page{
+  height: 100vh;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: var(--bg-chat-header);
+  font-size: 3rem;
+  text-transform: capitalize;
+}
 /*----------- Login&Register -----------*/
 .auth-box{
   color: var(--txt-auth-color);
@@ -168,9 +177,10 @@ h1,h2,h3,h4,h5,h6{
 }
 
 .input-file-desctop{
+  position: relative; /* for error handling */
   display: flex;
   align-items: center;
-  margin-bottom: 1rem;
+  margin-bottom: 2rem;
   cursor: pointer;
 }
 .input-file-desctop .profile-img{
@@ -254,6 +264,7 @@ h1,h2,h3,h4,h5,h6{
 .home-search{
   border-bottom: 1px solid var(--txt-hint);
   padding: .6em .8em;
+  position: relative; /* for error handling */
 }
 .search-input{
   background: transparent;
@@ -273,10 +284,11 @@ h1,h2,h3,h4,h5,h6{
   padding: 1em .8em;
   flex-direction: column;
 }
-.sidebar-friends > * + * {
+/* .sidebar-friends > * + * {
   margin-top: 2em;
-}
+} */
 .home-friend{
+  margin-top: 2em;
   width: 100%;
   cursor: pointer;
   display: flex;
@@ -400,6 +412,7 @@ h1,h2,h3,h4,h5,h6{
   outline: none;
   border: none;
   flex-grow: 1;
+  background: transparent;
   color: var(--bg-sidebar);
   font-size: 1rem;
 }

@@ -1,17 +1,17 @@
-import { useContext } from "react";
+import { useContext} from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
-import Register from "./pages/Register";
+import {Register} from "./pages/Register";
 import Login from "./pages/Login";
 import Home from "./pages/Home";
 import * as routing from './routing';
 import { AuthContext } from "./context/AuthContext";
-import { IChild } from "./interfaces";
 
-function App() {
+export default function App() {
   
   const currentUser = useContext(AuthContext);
 
   const ProtectedRoute = ({children} : {children : any}) => {
+    console.log("Current U: " + currentUser);
     if(!currentUser){
       return <Navigate to={routing.login}/>
     }
@@ -22,16 +22,14 @@ function App() {
   return (
     <div className="app">
       <Routes>
-        <Route path={routing.start}>
-          <Route index element={<ProtectedRoute>
-            <Home />
-          </ProtectedRoute>} />
-          <Route path={routing.register} element={<Register />} />
-          <Route path={routing.login} element={<Login />} /> 
-        </Route>
-      </Routes>
+          <Route path={routing.start}>
+            <Route index element={<ProtectedRoute>
+              <Home />
+            </ProtectedRoute>} />
+            <Route path={routing.register} element={<Register />} />
+            <Route path={routing.login} element={<Login />} /> 
+          </Route>
+        </Routes>
     </div>
   );
 }
-
-export default App;

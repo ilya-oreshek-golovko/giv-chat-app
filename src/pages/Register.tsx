@@ -1,4 +1,4 @@
-import { ChangeEvent, SyntheticEvent, useRef, useState } from "react";
+import { SyntheticEvent, useRef, useState } from "react";
 import { login } from "../routing";
 import { addUser, registerWithEmailAndPassword } from "../firebase/auth";
 import { useNavigate, Link } from "react-router-dom";
@@ -8,108 +8,124 @@ import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import {updateProfile} from 'firebase/auth';
 import { storage } from "../firebase/firebase";
 
-export default function Register() {
+export const ErrorHandler = ({message} : {message : string}) => {
+    if(!message) return null;
+    console.log(message);
+    return(
+        <div className="auth-error-text">
+            {message}
+        </div>
+    );
+}
+
+export function Register() {
     const navigation = useNavigate();
 
     const userNameRef = useRef() as React.RefObject<HTMLInputElement>;
     const emailRef = useRef() as React.RefObject<HTMLInputElement>;
     const passwordRef = useRef() as React.RefObject<HTMLInputElement>;
     const confrimPasswordRef = useRef() as React.RefObject<HTMLInputElement>;
-    //const photoFileRef = useRef() as React.RefObject<HTMLInputElement>;
-    let photoFile : File;
+    const photoFileRef = useRef() as React.RefObject<HTMLInputElement>;
+    //let photoFile : File;
     const l = (mes : any) => console.log(mes);
 
     const [stateErrors, setStateErrors] = useState<RegisterError>({
         userNameError: "",
         emailError: "",
         passError: "",
-        confirmPassError: ""
+        confirmPassError: "",
+        profileImgErr: ""
     });
 
-    function getValidationResult(){
-        const getResult = (result : boolean = false) => {
-            if(result){
-                return [userNameRef.current?.value, emailRef.current?.value, passwordRef.current?.value];
-            }
+    function resetErrors(){
+        setStateErrors({
+            emailError: "",
+            userNameError: "",
+            passError: "",
+            confirmPassError: "",
+            profileImgErr: ""
+        });
+    }
 
-            return [null, null, null];
-        }
+    function validation(){
+        resetErrors();
 
         if(!userNameRef.current?.value){
-            setStateErrors({
-                userNameError: "Name is empty",
-                emailError: "",
-                passError: "",
-                confirmPassError: ""
-            });
-            return getResult();
+            setStateErrors(errors => ({
+                ...errors,
+                confirmPassError: "Name is empty"
+            }));
+            return false;
         } else if(!emailRef.current?.value){
-            setStateErrors({
-                emailError: "emailRef is empty",
-                userNameError: "",
-                passError: "",
-                confirmPassError: ""
-            });
-            return getResult();
+            setStateErrors(errors => ({
+                ...errors,
+                confirmPassError: "Email is empty"
+            }));
+            return false;
         }else if(!passwordRef.current?.value){
-            setStateErrors({
-                emailError: "",
-                userNameError: "",
-                passError: "passwordRef is empty",
-                confirmPassError: ""
-            });
-            return getResult();
+            setStateErrors(errors => ({
+                ...errors,
+                passError: "passwordRef is empty"
+            }));
+            return false;
         }else if(!confrimPasswordRef.current?.value){
-            setStateErrors({
-                emailError: "",
-                userNameError: "",
-                passError: "",
+            setStateErrors(errors => ({
+                ...errors,
                 confirmPassError: "Confirm passwordRef please"
-            });
-            return getResult();
+            }));
+            return false;
         } else if(confrimPasswordRef.current?.value !== passwordRef.current?.value){
-            setStateErrors({
-                emailError: "",
-                userNameError: "",
-                passError: "",
+            setStateErrors(errors => ({
+                ...errors,
                 confirmPassError: "Passwords don't match. Plese try again"
-            });
-            return getResult();
+            }));
+            return false;
+        }else if(!photoFileRef.current?.files){
+            setStateErrors(errors => ({
+                ...errors,
+                profileImgErr: "Please select your profile image"
+            }));
+            return false;
         }
 
-        return getResult(true);
+        return true;
     }
 
     async function onFormSubmit(evt : SyntheticEvent<HTMLFormElement, SubmitEvent>){
-        evt.preventDefault();
-  
-        const [userName, email, password] = getValidationResult();
 
-        if(!userName || !email || !password || !photoFile){
+        evt.preventDefault();
+
+        if(!validation()){
+            l("Some of the values are undefined");
             return null;
         }
-        l(`${userName} - ${email} - ${password} - ${photoFile}`);
+
+        const email = emailRef.current?.value!;
+        const password = passwordRef.current?.value!;
+        const profile = photoFileRef.current?.files![0]!;
+        const userName = userNameRef.current?.value!;
+
+
         const res = await registerWithEmailAndPassword(email, password);
     
         if(typeof res !== "object"){
             alert(`Error: ${res}`);
             return;
         }
-        l("Test 0");
+
         //Create a unique image name
         const date = new Date().getTime();
         const storageRef = ref(storage, `${userName + date}`);
-        l(storageRef);
-        await uploadBytesResumable(storageRef, photoFile).then(() => {
+
+        await uploadBytesResumable(storageRef, profile).then(() => {
             getDownloadURL(storageRef).then(async (downloadURL) => {
             try {
-                l("Test 1");
-                //Update profile
+
                 await updateProfile(res.user, {
                     displayName : userName,
                     photoURL: downloadURL,
                 });
-                l("Test 2");
+                l("Profile Updated!");
 
                 await addUser({
                     uid: res.user.uid,
@@ -117,41 +133,14 @@ export default function Register() {
                     photoURL: downloadURL,
                     email
                 });
+                l("User added!");
                 
                 navigation("/");
-                // //create user on firestore
-                // await setDoc(doc(db, "users", res.user.uid), {
-                //     uid: res.user.uid,
-                //     userName,
-                //     email,
-                //     photoURL: downloadURL,
-                // });
-                // l("Test 3");
-                // //create empty user chats on firestore
-                // await setDoc(doc(db, "userChats", res.user.uid), {});
-                //navigate("/");
             } catch (err) {
                 console.log(err);
             }
             });
         });
-    }
-
-    const ErrorHandler = ({message} : {message : string}) => {
-        if(!message) return null;
-
-        return(
-            <div className="auth-error-text">
-                {message}
-            </div>
-        );
-    }
-    
-    function testGiv(event: ChangeEvent<HTMLInputElement>): void {
-        console.log(event.target.files);
-        if(!event.target.files) return;
-        photoFile = event.target.files[0]
-        //uploadFileTest(event.target.files[0]); 
     }
 
     return (
@@ -178,11 +167,12 @@ export default function Register() {
             <label htmlFor="auth-repeat-password" className="auth-input-label">Repeat Password</label>
             <ErrorHandler message={stateErrors.confirmPassError}/>
           </div>
-          <label className="input-file-desctop">
+        <label className="input-file-desctop">
             <ImFilePicture className="profile-img"/>
             Choose your avatar
-            <input type="file" className="input-file" onChange={testGiv}/>
-          </label>
+            <input type="file" className="input-file" ref={photoFileRef}/>
+            <ErrorHandler message={stateErrors.profileImgErr}/>
+        </label>
           <input type="submit" value="Submit" className="auth-btn-submit"/>
           <p className="auth-footer-notice">
               You already have an account? <Link to={login} className="auth-nav-link">Login</Link>

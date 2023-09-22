@@ -7,9 +7,8 @@ interface IFriend{
     id: number
 }
 interface IUser{
-    uid: string,
+    uid: string;
     name: string,
-    //friends : Array<number>,
     photoURL: string,
     email: string
 }
