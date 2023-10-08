@@ -7,6 +7,7 @@ import { ImFilePicture } from "react-icons/im"
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import {updateProfile} from 'firebase/auth';
 import { storage } from "../firebase/firebase";
+import { createUserChat } from "../firebase/chat";
 
 export const ErrorHandler = ({message} : {message : string}) => {
     if(!message) return null;
@@ -134,6 +135,9 @@ export function Register() {
                     email
                 });
                 l("User added!");
+
+                await createUserChat(res.user.uid);
+                l("Empty chat was created!");
                 
                 navigation("/");
             } catch (err) {

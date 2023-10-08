@@ -1,8 +1,11 @@
+import {MouseEventHandler} from 'react';
+
 type FriendProps = {
-    key: number,
+    key: string,
     friendName : string,
     lastMessage: string,
-    src: string
+    src: string,
+    handleObjClick: MouseEventHandler<HTMLDivElement>
 }
 type RegisterError = {
     userNameError: string,

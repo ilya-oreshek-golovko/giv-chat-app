@@ -2,6 +2,7 @@ import { SyntheticEvent, useRef, useState } from "react";
 import {logInWithEmailAndPassword} from '../firebase/auth';
 import { useNavigate, Link } from "react-router-dom";
 import { register as rRegister, start as rStart } from '../routing';
+
 export default function Login() {
   const email = useRef() as React.RefObject<HTMLInputElement>;
   const password = useRef() as React.RefObject<HTMLInputElement>;

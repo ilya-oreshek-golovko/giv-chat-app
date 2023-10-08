@@ -1,4 +1,4 @@
-import React, { ReactChildren, ReactChild } from 'react';
+import { Timestamp } from "firebase/firestore";
 
 interface IFriend{
     name: string,
@@ -12,10 +12,27 @@ interface IUser{
     photoURL: string,
     email: string
 }
- 
-interface IChild {
-  children: ReactChild | undefined | Element | null
+interface IUserInfoHeader{
+    name: string,
+    photoURL: string,
+    uid: string,
 }
+interface IChatHeader{
+    uid : string,
+    userInfo: IUserInfoHeader,
+    date: Date
+}
+interface IChat{
+    chatID: string,
+    user : IUserInfoHeader
+}
+interface IMessage{
+    id: string,
+    date: Timestamp, 
+    senderID: string,
+    text: string,
+    img: string
+}
+ 
 
-
-export type {IFriend, IUser, IChild}
+export type {IFriend, IUser, IUserInfoHeader, IChatHeader, IChat, IMessage}

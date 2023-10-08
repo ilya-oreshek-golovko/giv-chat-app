@@ -9,11 +9,9 @@ export function AuthContextProvider({children} : {children : any}){
     const [isLoading, setIsLoading] = useState<boolean>(true);
 
     useEffect(() => {
-        console.log("Test GIV");
         const unsub = onAuthStateChanged( auth, (user) => {
             setCurrentUser(user);
             setIsLoading(false);
-            console.log(`user: ${user}`);
         });
 
         return () => {

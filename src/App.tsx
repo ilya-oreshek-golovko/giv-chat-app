@@ -11,7 +11,7 @@ export default function App() {
   const currentUser = useContext(AuthContext);
 
   const ProtectedRoute = ({children} : {children : any}) => {
-    console.log("Current U: " + currentUser);
+    console.log("APP: Current User " + currentUser);
     if(!currentUser){
       return <Navigate to={routing.login}/>
     }
