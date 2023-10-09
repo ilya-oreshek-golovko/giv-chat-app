@@ -5,6 +5,7 @@ import { ErrorHandler } from '../../pages/Register';
 import Friend from './Friend';
 import { IUser, IUserInfoHeader } from '../../interfaces';
 import { AuthContext } from '../../context/AuthContext';
+import { ChatContext } from '../../context/ChatContext';
 import { createChat, getChat, updateChatHeader } from '../../firebase/chat';
 import { getCombinedChatID } from '../../hooks/hooks';
 
@@ -24,6 +25,7 @@ export default function Search() {
   });
 
   const currentUser = useContext(AuthContext);
+  const cChat = useContext(ChatContext);
 
   async function handleSearch() {
     try{
@@ -97,6 +99,15 @@ export default function Search() {
           [combinedID + ".date"] : serverTimestamp()
         });
         l("Chat Header(user) was created!");
+
+        cChat?.setCurrentChat({
+            chatID: combinedID,
+            user: {
+              name: user.name,
+              photoURL: user.photoURL,
+              uid: user.uid
+            } as IUserInfoHeader
+        });
       }
 
     }catch(e : any){

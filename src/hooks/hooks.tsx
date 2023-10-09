@@ -33,7 +33,7 @@ export function useChats(){
 
 export function useMessages(){
     const chat = useContext(ChatContext);
-    const [messages, setMessages] = useState<IMessage[]>();
+    const [messages, setMessages] = useState<IMessage[] | undefined>();
 
     useEffect(() => {
 
@@ -41,7 +41,7 @@ export function useMessages(){
             onSnapshot(doc(db, "chats", chat?.currentChat?.chatID!), (document) => {
                 const response = document.exists() && 
                 document.data()["messages"]
-                .map((message : IMessage) => ({ 
+                ?.map((message : IMessage) => ({ 
                     senderID: message.senderID,
                     text: message.text,
                     img: message.img,
@@ -49,16 +49,14 @@ export function useMessages(){
                     date: message.date
                 }));
 
-                console.log("Ilya messages Test");
-                console.log(response);
-                setMessages(response || []);
+                setMessages(response);
             });
         } 
 
         chat?.currentChat?.chatID && getMessages();
     }, [chat?.currentChat?.chatID])
 
-    return messages;
+    return messages || [];
 }
 
 export function getCombinedChatID(currentUserID : string, friendID : string){

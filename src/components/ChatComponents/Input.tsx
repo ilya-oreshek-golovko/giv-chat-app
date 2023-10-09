@@ -1,4 +1,4 @@
-import { useContext, useRef, useState } from 'react';
+import { useContext, useRef, useState, ChangeEvent } from 'react';
 import { BsPaperclip } from 'react-icons/bs';
 import { MdOutlineAddPhotoAlternate } from 'react-icons/md';
 import { IMessage } from '../../interfaces';
@@ -17,30 +17,32 @@ export default function Input() {
   const currentUser = useContext(AuthContext);
   const chatData = useContext(ChatContext);
 
-  const textRef = useRef() as React.RefObject<HTMLInputElement>;
   const docRef = useRef() as React.RefObject<HTMLInputElement>;
-  const [img, setImg] = useState<File>();
+  const [text, setText] = useState<string>();
+  const [img, setImg] = useState<File | undefined>();
   //const [inputError, setInputError] = useState<string>();
 
-  function inputValidation(){
-    if(!textRef.current?.value || img?.size == 0){
-      l("*Please type a message or select a file/image");
-      //setInputError("*Please type a message or select a file/image");
-      return false;
-    }else if(!chatData?.currentChat?.chatID){
-      l("*Cannot identify the related chat. Please select a friend");
-      //setInputError("*Cannot identify the related chat. Please contact sysadmin");
-      return false;
-    }
+  // function inputValidation(){
+  //   if(!textRef.current?.value || img?.size == 0){
+  //     l("*Please type a message or select a file/image");
+  //     //setInputError("*Please type a message or select a file/image");
+  //     return false;
+  //   }else if(!chatData?.currentChat?.chatID){
+  //     l("*Cannot identify the related chat. Please select a friend");
+  //     //setInputError("*Cannot identify the related chat. Please contact sysadmin");
+  //     return false;
+  //   }
 
-    //setInputError("");
-    return true;
-  }
+  //   //setInputError("");
+  //   return true;
+  // }
   
   async function saveMessage(url : string = ""){
+    if(!url && !text) return;
+
     const message : IMessage = {
       senderID: currentUser.uid,
-      text: textRef.current?.value || "",
+      text : text!,
       img: url,
       id: uuid(),
       date: Timestamp.now()
@@ -53,7 +55,7 @@ export default function Input() {
   async function handleSendClick(evt : React.MouseEvent<HTMLButtonElement>){
     evt.preventDefault();
 
-    if(!inputValidation()) return null;
+    //if(!inputValidation()) return null;
 
     if(img){
       const fileRef = ref(storage, uuid());
@@ -67,12 +69,13 @@ export default function Input() {
       saveMessage();
     }
 
-    
+    setText("");
+    setImg(undefined);
   }
 
   return (
     <div className="chat-footer">
-        <input type="text" className="chat-message-input" placeholder='Type a message' ref={textRef}/>
+        <input type="text" className="chat-message-input" placeholder='Type a message' value={text} onChange={(e) => setText(e.target.value)}/>
         {/* {
           inputError &&
           <div className="chat-footer-error">

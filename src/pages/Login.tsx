@@ -42,7 +42,7 @@ export default function Login() {
     if(!validation()) {
       return null;
     };
-    //const user = registerWithEmailAndPassword(email.current.value, password.current.value);
+
     const result = await logInWithEmailAndPassword(email.current?.value!, password.current?.value!);
     
     if(typeof result !== "object"){
