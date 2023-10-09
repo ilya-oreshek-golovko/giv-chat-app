@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import { AuthContext } from "../context/AuthContext";
 import { IChatHeader, IMessage } from "../interfaces";
 import { doc, onSnapshot } from "firebase/firestore";
@@ -63,4 +63,22 @@ export function getCombinedChatID(currentUserID : string, friendID : string){
     return currentUserID > friendID 
             ? currentUserID + friendID 
             : friendID + currentUserID;
+}
+
+export function useModalElement(){
+    const modalRootElement = document.getElementById("modal");
+
+    const element = useMemo(() => {
+        const el = document.createElement("div");
+        el.classList.add("modal-preview");
+        return el;
+    }, []);
+    useEffect(() => {
+        modalRootElement?.appendChild(element);
+        return () =>{
+            modalRootElement?.removeChild(element);
+        }
+    })
+
+    return element;
 }
