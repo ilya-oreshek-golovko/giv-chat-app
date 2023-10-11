@@ -70,15 +70,15 @@ export function useModalElement(){
 
     const element = useMemo(() => {
         const el = document.createElement("div");
-        el.classList.add("modal-preview");
         return el;
     }, []);
     useEffect(() => {
         modalRootElement?.appendChild(element);
+        console.log("TTT");
         return () =>{
             modalRootElement?.removeChild(element);
         }
-    })
+    }, [])
 
     return element;
 }

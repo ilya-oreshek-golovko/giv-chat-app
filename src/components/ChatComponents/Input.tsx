@@ -10,21 +10,23 @@ import { ChatContext } from '../../context/ChatContext';
 import { v4 as uuid } from "uuid"; 
 import { Timestamp } from 'firebase/firestore';
 import Modal from '../Modal';
+import SelectedFiles from './SelectedFiles';
 
 const l = (mes : any) => console.log("Input: ", mes);
 
-type TDocument = {
+export type TDocument = {
   docFile : File | undefined,
   docLink : string
 }
-type TImage = {
+export type TImage = {
   imgFile : File | undefined,
   imgLink : string
 }
 type InputState = {
   text : string,
   images : Array<TImage>,
-  documents: Array<TDocument>
+  documents: Array<TDocument>,
+  isModalOpen: boolean
 }
 export default function Input() {
 
@@ -35,7 +37,8 @@ export default function Input() {
   const [state, setState] = useState<InputState>({
     text: "",
     images : [],
-    documents: []
+    documents: [],
+    isModalOpen : false
   });
   // const [text, setText] = useState<string>();
   // const [doc, setDoc] = useState<File | undefined>();
@@ -129,7 +132,10 @@ export default function Input() {
 
   function handleImagesClick(evt : React.MouseEvent<HTMLButtonElement>){
     evt.preventDefault();
-    return
+    setState(prevState => ({
+      ...prevState,
+      isModalOpen: !prevState.isModalOpen
+    }));
   }
 
   return (
@@ -158,7 +164,7 @@ export default function Input() {
           </label>
           <label>
               <MdOutlineAddPhotoAlternate className="btn chat-clip-image"/>
-              <input type="file" className="input-file" onChange={handleDocumentChange}/>
+              <input type="file" className="input-file" onChange={handleImageChange}/>
               {
                 state.images.length > 0 &&
                 <button className="chat-btn-preview-files" onClick={handleImagesClick}>{state.images.length}</button>
@@ -166,9 +172,9 @@ export default function Input() {
           </label>
           <button className="btn chat-btn-send-message" onClick={handleSendClick}>Send</button>
         </div>
-        <Modal>{
-        <div>Hui Ilya</div>  
-        }</Modal>
+        <Modal isOpen={state.isModalOpen}>
+           <SelectedFiles images={state.images} documents={[]} />
+        </Modal>
     </div>
   )
 }
