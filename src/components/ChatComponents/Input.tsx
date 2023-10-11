@@ -1,10 +1,10 @@
-import { ChangeEvent, useContext, useState } from 'react';
+import { ChangeEvent, MouseEvent, useContext, useState } from 'react';
 import { BsPaperclip } from 'react-icons/bs';
 import { MdOutlineAddPhotoAlternate } from 'react-icons/md';
 import { IMessage } from '../../interfaces';
 import { addMessage } from '../../firebase/chat';
 import { AuthContext } from '../../context/AuthContext';
-import { getDownloadURL, ref, uploadBytesResumable } from 'firebase/storage';
+import { getDownloadURL, list, ref, uploadBytesResumable } from 'firebase/storage';
 import { storage } from '../../firebase/firebase';
 import { ChatContext } from '../../context/ChatContext';
 import { v4 as uuid } from "uuid"; 
@@ -101,6 +101,7 @@ export default function Input() {
   }
 
   function handleDocumentChange(evt : ChangeEvent<HTMLInputElement>){
+    l(evt.target.files![0]);
     if(evt.target.files && evt.target.files[0]){
       setState(prevState => ({
         ...prevState, 
@@ -108,7 +109,7 @@ export default function Input() {
           ...prevState?.documents, 
           {
             docFile : evt.target.files![0], 
-            docLink : ""
+            docLink : URL.createObjectURL(evt.target.files![0])
           }
         ]
       }));
@@ -116,6 +117,7 @@ export default function Input() {
   }
 
   function handleImageChange(evt : ChangeEvent<HTMLInputElement>){
+    l(evt.target.files![0]);
     if(evt.target.files && evt.target.files[0]){
       setState(prevState => ({
         ...prevState, 
@@ -130,12 +132,30 @@ export default function Input() {
     }
   }
 
-  function handleImagesClick(evt : React.MouseEvent<HTMLButtonElement>){
+  function handleModalView(evt : React.MouseEvent<HTMLButtonElement>){
     evt.preventDefault();
     setState(prevState => ({
       ...prevState,
       isModalOpen: !prevState.isModalOpen
     }));
+  }
+
+  function deleteFiles(listType : string){
+    if(listType == "images") {
+      setState(prevState => ({
+        ...prevState,
+        isModalOpen: false,
+        images: []
+      }));
+    }else if(listType == "documents"){
+      setState(prevState => ({
+        ...prevState,
+        isModalOpen: false,
+        documents: []
+      }));
+    }else{
+      l("Error: unable to define list type to delete selected files");
+    }
   }
 
   return (
@@ -159,7 +179,7 @@ export default function Input() {
               <input type="file" className="input-file" onChange={handleDocumentChange}/>
               {
                 state.documents.length > 0 &&
-                <button className="chat-btn-preview-files">{state.documents.length}</button>
+                <button className="chat-btn-preview-files" onClick={handleModalView}>{state.documents.length}</button>
               }
           </label>
           <label>
@@ -167,14 +187,13 @@ export default function Input() {
               <input type="file" className="input-file" onChange={handleImageChange}/>
               {
                 state.images.length > 0 &&
-                <button className="chat-btn-preview-files" onClick={handleImagesClick}>{state.images.length}</button>
+                <button className="chat-btn-preview-files" onClick={handleModalView}>{state.images.length}</button>
               }
           </label>
           <button className="btn chat-btn-send-message" onClick={handleSendClick}>Send</button>
         </div>
-        <Modal isOpen={state.isModalOpen}>
-           <SelectedFiles images={state.images} documents={[]} />
-        </Modal>
+
+        <SelectedFiles modalState={state.isModalOpen} images={state.images} documents={state.documents} handleModalView={handleModalView} deleteFiles={deleteFiles} />
     </div>
   )
 }

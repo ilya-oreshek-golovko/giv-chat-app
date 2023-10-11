@@ -10,6 +10,8 @@ body {
   --border-input: #5087be;
   --hint-color: #8f9090;
   --shadow: #3a3c3d;
+  --bg-positive: #18a12f;
+  --bg-negative: #a12118;
   --bg-chat: var(--gradient-second);
   --bg-sidebar: #2a4557;
   --bg-navbar: #1c2b35;
@@ -524,16 +526,136 @@ h1,h2,h3,h4,h5,h6{
   margin-right: var(--mg-message-content);
 }
 
-/* SelectedFiles */
+/* --------- SelectedFiles --------- */
 .selected-files-box{
-  padding: .5em;
+  position: fixed;
+  display: flex;
+  flex-direction: column;
+  right: -1000px;
+  top: 0;
+  bottom: 0;
+  width: 50%;
+  padding: 1em;
   border-radius: .4em;
-  background-color: var(--bg-chat-footer);
+  background-color: rgba(0, 0, 0, .8);
+  transition: all 500ms ease-in-out;
+}
+.selected-files-box.open{
+  right: 0;
+}
+.selected-files-header{
+  text-align: center;
+  font-size: 2rem;
+  font-weight: 600;
+  color: white;
+  text-transform: capitalize;
+}
+
+.selected-files-items-box{
   display: flex;
   flex-direction: row;
+  padding: 1rem;
 }
-.selected-files-box > * + *{
-  margin-right: .4em;
+.selected-files-items-box > * + *{
+  margin-left: .8em;
+}
+.selected-files-item{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 20%;
+}
+.selected-files-type{
+  height: 6rem;
+  width: 6rem;
+}
+.selected-files-type.image{
+  box-shadow: 2px 2px 8px white;
+  object-fit: cover;
+}
+.selected-file-description{
+  text-align: center;
+  padding: .2rem;
+  font-size: .8rem;
+  font-weight: 300;
+  color: white;
+  margin-top: .6rem;
+  word-break: break-all;
+}
+.selected-files-btn-box{
+  margin-top: auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.selected-files-btn-box > * + *{
+  margin-left: 1rem;
+}
+.selected-files-btn{
+  width: 15%;
+  border-radius: 1em;
+  padding: .6em 1.2em;
+  outline: none;
+  border: none;
+  font-size: 1rme;
+  color: white;
+  cursor: pointer;
+}
+.selected-files-btn.confirmation{
+  background-color: var(--bg-positive);
+}
+.selected-files-btn.delete{
+  background-color: var(--bg-negative);
+}
+.modal-box{
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  height: 100vh;
+  width: 100%;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* --------- Confirmation Box --------- */
+.confirmation-box{
+  width: 35%;
+  border-radius: 1em;
+  background: linear-gradient(var(--bg-message-owner), var(--border-input));
+  box-shadow: 2px 2px 8px rgba(255, 255, 255, .3);
+}
+.confirmation-text{
+  font-size: 1rem;
+  color: white;
+  padding: 1.5rem .5rem;
+  text-align: center;
+}
+.confirmation-btn-box{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.confirmation-btn{
+  width: 20%;
+  border-radius: 1em;
+  margin: .5em 0px;
+  padding: .4em 0px;
+  outline: none;
+  border: none;
+  font-size: .8rme;
+  color: white;
+  cursor: pointer;
+}
+.confirmation-btn.positive{
+  background-color: var(--bg-positive);
+}
+.confirmation-btn.negative{
+  background-color: var(--bg-negative);
+}
+.confirmation-btn-box > * + *{
+  margin-left: .5rem;
 }
 
 /* --------- MEDIA --------- */

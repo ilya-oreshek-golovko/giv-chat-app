@@ -74,7 +74,6 @@ export function useModalElement(){
     }, []);
     useEffect(() => {
         modalRootElement?.appendChild(element);
-        console.log("TTT");
         return () =>{
             modalRootElement?.removeChild(element);
         }
