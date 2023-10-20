@@ -9,17 +9,16 @@ import { storage } from '../../firebase/firebase';
 import { ChatContext } from '../../context/ChatContext';
 import { v4 as uuid } from "uuid"; 
 import { Timestamp } from 'firebase/firestore';
-import Modal from '../Modal';
 import SelectedFiles from './SelectedFiles';
 
 const l = (mes : any) => console.log("Input: ", mes);
 
 export type TDocument = {
-  docFile : File | undefined,
+  docFile : File,
   docLink : string
 }
 export type TImage = {
-  imgFile : File | undefined,
+  imgFile : File,
   imgLink : string
 }
 type InputState = {
@@ -33,71 +32,104 @@ export default function Input() {
   const currentUser = useContext(AuthContext);
   const chatData = useContext(ChatContext);
 
-  //const docRef = useRef() as React.RefObject<HTMLInputElement>;
   const [state, setState] = useState<InputState>({
     text: "",
     images : [],
     documents: [],
     isModalOpen : false
   });
-  // const [text, setText] = useState<string>();
-  // const [doc, setDoc] = useState<File | undefined>();
-  // const [img, setImg] = useState<File | undefined>();
-  //const [inputError, setInputError] = useState<string>();
 
-  function inputValidation(){
-    // if(!chatData?.currentChat?.chatID){
-    //   l("*Cannot identify the related chat. Please select a friend");
-    //   //setInputError("*Please type a message or select a file/image");
-    //   return false;
-    // }else if(!state.text || state.img?.size == 0){
-    //   l("*Please type a message or select a file/image");
-    //   //setInputError("*Cannot identify the related chat. Please contact sysadmin");
-    //   return false;
-    // }
-
-    // //setInputError("");
-    // return true;
+  function clearInputFiels(){
+    setState({
+      text: "",
+      documents : [],
+      images: [],
+      isModalOpen: false
+    });
   }
   
-  async function saveMessage(url : string = ""){
-    // if(!url && !state.text) return;
+  function inputValidation(){
+    if(!chatData?.currentChat?.chatID){
+      l("*Cannot identify the related chat. Please select a friend");
+      //setInputError("*Please type a message or select a file/image");
+      return false;
+    }else if(!state.text && state.images.length == 0 && state.documents.length == 0){
+      l("*Please type a message or select a file/image");
+      //setInputError("*Cannot identify the related chat. Please contact sysadmin");
+      return false;
+    }
 
-    // const message : IMessage = {
-    //   senderID: currentUser.uid,
-    //   text : state.text,
-    //   img: url,
-    //   id: uuid(),
-    //   date: Timestamp.now()
-    // };
+    //setInputError("");
+    return true;
+  }
+  
+  async function saveMessage(imagesStorageLinks : Array<string>, documentsStorageLinks : Array<string>){
+    
+    const message : IMessage = {
+      senderID: currentUser.uid,
+      text : state.text,
+      images : imagesStorageLinks,
+      documents : documentsStorageLinks,
+      id: uuid(),
+      date: Timestamp.now()
+    };
 
-    // await addMessage(message, chatData?.currentChat?.chatID!); // chatID will be checked in validation function
-    // l("Message saved");
+    await addMessage(message, chatData?.currentChat?.chatID!); // chatID will be checked in validation function
+    l("Message saved");
   }
 
-  async function handleSendClick(evt : React.MouseEvent<HTMLButtonElement>){
-    // evt.preventDefault();
+  function getUploadImagesLinks() : Array<string> {
+    if(state.images.length == 0) return [];
 
-    // if(!inputValidation()) return null;
+    const imagesStorageLinks : Array<string> = [];
 
-    // if(state.img){
-    //   const fileRef = ref(storage, uuid());
-    //   await uploadBytesResumable(fileRef, state.img).then(() => {
-    //     getDownloadURL(fileRef).then((url) => {
-    //       l(`File saved(${url})`);
-    //       saveMessage(url);
-    //     });
-    //   });
-    // }else{
-    //   saveMessage();
-    // }
+    state.images.forEach( async (imageObj : TImage) => {
+      const fileRef = ref(storage, uuid());
 
-    // setState({
-    //   text: "",
-    //   doc : undefined,
-    //   img : undefined,
-    //   imgDisplay: ""
-    // });
+      await uploadBytesResumable(fileRef, imageObj.imgFile).then(() => {
+          getDownloadURL(fileRef).then((imageURLfromStorage) => {
+            imagesStorageLinks.push(imageURLfromStorage);
+          });
+      }); 
+
+    });
+    
+    return imagesStorageLinks;
+  }
+
+  function getUploadDocumentsLinks() : Array<string> {
+    if(state.documents.length == 0) return [];
+
+    const documentsStorageLinks : Array<string> = [];
+
+    state.documents.forEach( async (docObj : TDocument) => {
+      const fileRef = ref(storage, uuid());
+
+      await uploadBytesResumable(fileRef, docObj.docFile).then(() => {
+          getDownloadURL(fileRef).then((docURLfromStorage) => {
+            documentsStorageLinks.push(docURLfromStorage);
+          });
+      }); 
+
+    });
+    
+    return documentsStorageLinks;
+  }
+
+  function handleSendClick(evt : React.MouseEvent<HTMLButtonElement>){
+    evt.preventDefault();
+
+    if(!inputValidation()) return;
+
+    const imagesStorageLinks : Array<string> = getUploadImagesLinks();
+
+    const documentsStorageLinks : Array<string> = getUploadDocumentsLinks();
+
+    l(`imagesStorageLinks : ${imagesStorageLinks.length}`);
+    l(`documentsStorageLinks : ${documentsStorageLinks.length}`);
+    saveMessage(imagesStorageLinks, documentsStorageLinks);
+
+    clearInputFiels();
   }
 
   function handleDocumentChange(evt : ChangeEvent<HTMLInputElement>){
@@ -140,7 +172,7 @@ export default function Input() {
     }));
   }
 
-  function deleteFiles(listType : string){
+  function clearSelectedFiles(listType : string){
     if(listType == "images") {
       setState(prevState => ({
         ...prevState,
@@ -176,7 +208,7 @@ export default function Input() {
         <div className="chat-message-actions-box">
           <label>
               <BsPaperclip className="btn chat-clip-doc"/>
-              <input type="file" className="input-file" onChange={handleDocumentChange}/>
+              <input type="file" className="input-file" accept='.docx' onChange={handleDocumentChange}/>
               {
                 state.documents.length > 0 &&
                 <button className="chat-btn-preview-files" onClick={handleModalView}>{state.documents.length}</button>
@@ -184,7 +216,7 @@ export default function Input() {
           </label>
           <label>
               <MdOutlineAddPhotoAlternate className="btn chat-clip-image"/>
-              <input type="file" className="input-file" onChange={handleImageChange}/>
+              <input type="file" className="input-file" accept='image/*' onChange={handleImageChange}/>
               {
                 state.images.length > 0 &&
                 <button className="chat-btn-preview-files" onClick={handleModalView}>{state.images.length}</button>
@@ -193,7 +225,7 @@ export default function Input() {
           <button className="btn chat-btn-send-message" onClick={handleSendClick}>Send</button>
         </div>
 
-        <SelectedFiles modalState={state.isModalOpen} images={state.images} documents={state.documents} handleModalView={handleModalView} deleteFiles={deleteFiles} />
+        <SelectedFiles modalState={state.isModalOpen} images={state.images} documents={state.documents} handleModalView={handleModalView} clearSelectedFiles={clearSelectedFiles} />
     </div>
   )
 }

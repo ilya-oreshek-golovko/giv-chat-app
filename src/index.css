@@ -342,6 +342,7 @@ h1,h2,h3,h4,h5,h6{
   border: none;
   transition: all .4s ease-in-out;
   background-size: 300% 100%;
+  cursor: pointer;
 }
 /* .color-1 {
   background-image: linear-gradient(to right, #25aae1, #40e495, #30dd8a, #2bb673);
@@ -524,6 +525,12 @@ h1,h2,h3,h4,h5,h6{
   color: var(--bg-auth-box);
   border-radius: .7rem 0rem .7rem .7rem;
   margin-right: var(--mg-message-content);
+}
+.message-images-box{
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 200px));
+  grid-template-rows: 200px;
+  /* grid-template-rows: repeat(auto-fill, minmax(100px, auto)); */
 }
 
 /* --------- SelectedFiles --------- */

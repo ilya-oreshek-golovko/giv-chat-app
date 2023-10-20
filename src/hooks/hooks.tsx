@@ -5,19 +5,20 @@ import { doc, onSnapshot } from "firebase/firestore";
 import { db } from "../firebase/firebase";
 import { ChatContext } from "../context/ChatContext";
 
-export function useChats(){
+export function useChats() : Array<any>{
     const l = (mes : any, title : string = "DEBUG useChats hook: ") => console.log(title, mes); 
     const currentUser = useContext(AuthContext);
-    const [chats, setChats] = useState<IChatHeader[]>();
+    const [chats, setChats] = useState<IChatHeader[]>([]);
 
 
     useEffect(function(){
         const getChats = function(){
             l(currentUser.uid);
             const unsub = onSnapshot(doc(db, "userChats", currentUser.uid), (doc) => {
-                const result = doc.exists() ? Object.entries(doc.data()).map(chat => ({"uid": chat[0], "userInfo" : chat[1].userInfo, "date": chat[1].date})) : undefined;
-                setChats(result);
-                l("Received chats: " + result);
+                const result = doc.exists() ? Object.entries(doc.data()).map(chat => ({"uid": chat[0], "userInfo" : chat[1].userInfo, "date": chat[1].date})) : [];
+                if(result.length > 0) setChats(result);
+                
+                l("Received chats: " + result.length);
             });
 
             return () =>{
@@ -44,10 +45,11 @@ export function useMessages(){
                 ?.map((message : IMessage) => ({ 
                     senderID: message.senderID,
                     text: message.text,
-                    img: message.img,
+                    documents : message.documents,
+                    images: message.images,
                     id: message.id,
                     date: message.date
-                }));
+                } as IMessage));
 
                 setMessages(response);
             });

@@ -11,7 +11,7 @@ import { getCombinedChatID } from '../../hooks/hooks';
 
 type TSearch = {
     error : string,
-    users : IUser[] | undefined
+    users : IUser[]
 }
 const l = (mes : any) => console.log(mes);
 
@@ -21,11 +21,18 @@ export default function Search() {
 
   const [state, setState] = useState<TSearch>({
     error : "",
-    users : undefined
+    users : []
   });
 
   const currentUser = useContext(AuthContext);
   const cChat = useContext(ChatContext);
+
+  function clearState(){
+    setState({
+      error : "",
+      users : []
+    })
+  }
 
   async function handleSearch() {
     try{
@@ -34,7 +41,7 @@ export default function Search() {
       if(userName == currentUser.displayName){
         setState({
           error: "It is your name!",
-          users : undefined
+          users : []
         });
         return null;
       }
@@ -44,19 +51,18 @@ export default function Search() {
       if(qSnapshot.size == 0){
         setState({
           error: "User not found!",
-          users : undefined
+          users : []
         });
         return null;
       }
 
-      console.log(qSnapshot.size);
       const users : IUser[] = []; 
       qSnapshot.forEach(doc => {
         users.push(doc.data() as IUser);
       });
       setState({
         error: "",
-        users : users
+        users
       });
     }catch(e : any){
       console.log(e);
@@ -69,51 +75,50 @@ export default function Search() {
   }
 
   async function handleSelect(user : IUser) {
-
+    l("Test");
     const combinedID = getCombinedChatID(currentUser.uid, user.uid);
     
     try{
       const chatObj = await getChat(combinedID);
 
-      if(!chatObj.exists()){
+      if(chatObj.exists()) return;
 
-        await createChat(combinedID);
-        l("Chat was created!");
+      await createChat(combinedID);
+      l("Chat was created!");
 
-        await updateChatHeader(currentUser.uid, {
-          [combinedID + ".userInfo"] : {
+      await updateChatHeader(currentUser.uid, {
+        [combinedID + ".userInfo"] : {
+          name: user.name,
+          photoURL: user.photoURL,
+          uid: user.uid
+        } as IUserInfoHeader,
+        [combinedID + ".date"] : serverTimestamp()
+      });
+      l("Chat Header(currentUser) was created!");
+
+      await updateChatHeader(user.uid, {
+        [combinedID + ".userInfo"] : {
+          name: currentUser.displayName,
+          photoURL: currentUser.photoURL,
+          uid: currentUser.uid
+        } as IUserInfoHeader,
+        [combinedID + ".date"] : serverTimestamp()
+      });
+      l("Chat Header(user) was created!");
+
+      cChat?.setCurrentChat({
+          chatID: combinedID,
+          user: {
             name: user.name,
             photoURL: user.photoURL,
             uid: user.uid
-          } as IUserInfoHeader,
-          [combinedID + ".date"] : serverTimestamp()
-        });
-        l("Chat Header(currentUser) was created!");
-
-        await updateChatHeader(user.uid, {
-          [combinedID + ".userInfo"] : {
-            name: currentUser.displayName,
-            photoURL: currentUser.photoURL,
-            uid: currentUser.uid
-          } as IUserInfoHeader,
-          [combinedID + ".date"] : serverTimestamp()
-        });
-        l("Chat Header(user) was created!");
-
-        cChat?.setCurrentChat({
-            chatID: combinedID,
-            user: {
-              name: user.name,
-              photoURL: user.photoURL,
-              uid: user.uid
-            } as IUserInfoHeader
-        });
-      }
-
+          } as IUserInfoHeader
+      });
+      
+      clearState();
     }catch(e : any){
       l(e);
     }
-
   } 
 
 
@@ -123,7 +128,7 @@ export default function Search() {
       {
         state.error && <ErrorHandler message={state.error} />
       }
-      {state.users && 
+      {state.users.length > 0 && 
         state.users.map(user => (
           <Friend key={user.uid} friendName={user.name} lastMessage="" src={user.photoURL} 
           handleObjClick={

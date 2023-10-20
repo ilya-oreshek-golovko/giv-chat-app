@@ -31,7 +31,8 @@ interface IMessage{
     date: Timestamp, 
     senderID: string,
     text: string,
-    img: string
+    documents: Array<string>
+    images: Array<string>
 }
  
 

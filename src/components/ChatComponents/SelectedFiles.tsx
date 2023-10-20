@@ -7,18 +7,18 @@ type TSelectedFiles = {
     images: Array<TImage>,
     documents: Array<TDocument>,
     handleModalView: MouseEventHandler<HTMLButtonElement>,
-    deleteFiles: Function,
+    clearSelectedFiles: Function,
     modalState: boolean
 }
 export default function SelectedFiles(props : TSelectedFiles) {
-    const { images, documents, handleModalView, deleteFiles, modalState } = props;
+    const { images, documents, handleModalView, clearSelectedFiles, modalState } = props;
 
     const [modalView, setModalView] = useState<boolean>(false);
     const listType = images.length > 0 ? "images" : "documents";
 
     function handleDeleteAction(evt : React.MouseEvent<HTMLButtonElement>) {
         evt.preventDefault();
-        deleteFiles(listType);
+        clearSelectedFiles(listType);
         setModalView(false);
     }
 

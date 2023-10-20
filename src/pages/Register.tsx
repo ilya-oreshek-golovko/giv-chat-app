@@ -27,6 +27,8 @@ export function Register() {
     const passwordRef = useRef() as React.RefObject<HTMLInputElement>;
     const confrimPasswordRef = useRef() as React.RefObject<HTMLInputElement>;
     const photoFileRef = useRef() as React.RefObject<HTMLInputElement>;
+
+    // const [photo, setState] = useState<TRegister>();
     //let photoFile : File;
     const l = (mes : any) => console.log(mes);
 
@@ -147,6 +149,10 @@ export function Register() {
         });
     }
 
+    function handleProfileImageChange(evt : React.ChangeEvent<HTMLInputElement>){
+       resetErrors(); // force the page to be updated after a user changed profile image to show a new one
+    }
+
     return (
       <form className="auth-box" onSubmit={onFormSubmit}>
           <h1 className="auth-box-title">GIV Chat</h1>
@@ -172,9 +178,15 @@ export function Register() {
             <ErrorHandler message={stateErrors.confirmPassError}/>
           </div>
         <label className="input-file-desctop">
-            <ImFilePicture className="profile-img"/>
+            {
+                photoFileRef.current?.files![0] != undefined 
+                ?
+                <img src={URL.createObjectURL(photoFileRef.current.files[0])} alt="profile-img" className="profile-img" />
+                :
+                <ImFilePicture className="profile-img"/>
+            }
             Choose your avatar
-            <input type="file" className="input-file" ref={photoFileRef}/>
+            <input type="file" className="input-file" ref={photoFileRef} onChange={handleProfileImageChange}/>
             <ErrorHandler message={stateErrors.profileImgErr}/>
         </label>
           <input type="submit" value="Submit" className="auth-btn-submit"/>
