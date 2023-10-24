@@ -511,7 +511,8 @@ h1,h2,h3,h4,h5,h6{
   align-items: center;
 }
 .message-content{
-  max-width: 50%;
+  max-width: 60%;
+  word-break: break-all;
   padding: .5em 1.2em;
 }
 .message-content.friend-content{
@@ -527,10 +528,16 @@ h1,h2,h3,h4,h5,h6{
   margin-right: var(--mg-message-content);
 }
 .message-images-box{
+  max-width: 100%;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(100px, 200px));
-  grid-template-rows: 200px;
-  /* grid-template-rows: repeat(auto-fill, minmax(100px, auto)); */
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  grid-gap: .3em;
+  grid-template-rows: 1fr;
+  grid-auto-flow: dense;
+}
+.message-image{
+  max-width: 100%;
+  height: auto;
 }
 
 /* --------- SelectedFiles --------- */

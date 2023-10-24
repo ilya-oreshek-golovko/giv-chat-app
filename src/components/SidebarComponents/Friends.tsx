@@ -13,10 +13,10 @@ export default function Friends() {
         <div className='sidebar-friends'>
             {
                 chats.length > 0 &&
-                chats.map(({uid, userInfo, date}) => (
+                chats.map(({uid, userInfo, date, lastMessage}) => (
                     <Friend key={userInfo.uid} 
                         friendName={userInfo.name} 
-                        lastMessage={"test mes 1"} 
+                        lastMessage={lastMessage} 
                         src={userInfo.photoURL} 
                         handleObjClick={
                             (evt : React.MouseEvent<HTMLDivElement>) => {

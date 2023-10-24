@@ -1,8 +1,8 @@
 import { ChangeEvent, MouseEvent, useContext, useState } from 'react';
 import { BsPaperclip } from 'react-icons/bs';
 import { MdOutlineAddPhotoAlternate } from 'react-icons/md';
-import { IMessage } from '../../interfaces';
-import { addMessage } from '../../firebase/chat';
+import { IMessage, IUser } from '../../interfaces';
+import { addMessage, updateChatHeader } from '../../firebase/chat';
 import { AuthContext } from '../../context/AuthContext';
 import { getDownloadURL, list, ref, uploadBytesResumable } from 'firebase/storage';
 import { storage } from '../../firebase/firebase';
@@ -29,7 +29,7 @@ type InputState = {
 }
 export default function Input() {
 
-  const currentUser = useContext(AuthContext);
+  const currentUser : IUser = useContext(AuthContext);
   const chatData = useContext(ChatContext);
 
   const [state, setState] = useState<InputState>({
@@ -78,6 +78,22 @@ export default function Input() {
     l("Message saved");
   }
 
+  function getLastMessage(){
+    if(state.text) return state.text;
+    
+    return "attached"
+  }
+
+  async function updateLastMessageForUsers() {
+    await updateChatHeader(currentUser.uid, {
+      [chatData?.currentChat?.chatID + ".lastMessage"] : getLastMessage()
+    });
+
+    await updateChatHeader(chatData?.currentChat?.user.uid!, {
+      [chatData?.currentChat?.chatID + ".lastMessage"] : getLastMessage()
+    });
+  }
+
   function getUploadImagesLinks() : Array<string> {
     if(state.images.length == 0) return [];
 
@@ -122,13 +138,14 @@ export default function Input() {
     if(!inputValidation()) return;
 
     const imagesStorageLinks : Array<string> = getUploadImagesLinks();
-
     const documentsStorageLinks : Array<string> = getUploadDocumentsLinks();
 
     l(`imagesStorageLinks : ${imagesStorageLinks.length}`);
     l(`documentsStorageLinks : ${documentsStorageLinks.length}`);
-    saveMessage(imagesStorageLinks, documentsStorageLinks);
 
+    saveMessage(imagesStorageLinks, documentsStorageLinks);
+    updateLastMessageForUsers();
+    
     clearInputFiels();
   }
 

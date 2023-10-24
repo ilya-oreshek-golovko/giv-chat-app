@@ -20,6 +20,7 @@ interface IUserInfoHeader{
 interface IChatHeader{
     uid : string,
     userInfo: IUserInfoHeader,
+    lastMessage: string,
     date: Date
 }
 interface IChat{

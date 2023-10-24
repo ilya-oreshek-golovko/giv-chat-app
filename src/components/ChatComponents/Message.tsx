@@ -35,10 +35,12 @@ export default function Message({message} : {message : IMessage}) {
       }
       {
         message.images?.length > 0 &&
-        <div className="message-images-box">
+        <div className="message-images">
           {
             message.images.map((imageLink : string) => (
-              <img src={imageLink} alt="img" className="message-image" />
+              <div className="message-image-container">
+                <img src={imageLink} alt="message-img" className="message-image" />
+              </div>
             ))    
           }
         </div>
