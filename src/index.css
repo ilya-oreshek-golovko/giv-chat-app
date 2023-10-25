@@ -483,6 +483,7 @@ h1,h2,h3,h4,h5,h6{
 /* --------- MESSAGE --------- */
 .chat-message{
   display: flex;
+  flex-direction: column;
   margin: .8em 0em;
   /* align-items: center; */
 }
@@ -515,20 +516,25 @@ h1,h2,h3,h4,h5,h6{
   word-break: break-all;
   padding: .5em 1.2em;
 }
-.message-content.friend-content{
+.test-ggg{
+  display: flex;
+  flex-direction: column;
+}
+.test-ggg.friend-content{
   background-color: var(--bg-auth-box);
   color: var(---border-input);
   border-radius: 0rem .7rem .7rem .7rem;
   margin-left: var(--mg-message-content);
 }
-.message-content.owner-content{
+.test-ggg.owner-content{
   background-color: var(--border-input);
   color: var(--bg-auth-box);
   border-radius: .7rem 0rem .7rem .7rem;
   margin-right: var(--mg-message-content);
 }
-.message-images-box{
-  max-width: 100%;
+.message-images{
+  margin-left: auto;
+  width: 60%;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
   grid-gap: .3em;
@@ -537,7 +543,6 @@ h1,h2,h3,h4,h5,h6{
 }
 .message-image{
   max-width: 100%;
-  height: auto;
 }
 
 /* --------- SelectedFiles --------- */
