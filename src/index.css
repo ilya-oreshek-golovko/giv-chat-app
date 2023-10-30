@@ -24,9 +24,11 @@ body {
   --size-friend-name: 1.2rem;
   --h-chat-header: 10%;
   --h-chat-main: calc(100% - (var(--h-chat-header) * 2));
-  --mg-message-content: .2rem;
   --w-sidebar: 35%;
   --w-chat: calc(100% - var(--w-sidebar));
+  --mg-message-content-text: 1rem;
+  --br-radius-mes-content-fr: 0rem .7rem .7rem .7rem;
+  --br-radius-mes-content-ow: .7rem 0rem .7rem .7rem;
 
   font-family: 'Nunito', sans-serif;
   background: linear-gradient(45deg, var(--gradient-first), var(--gradient-second)) no-repeat fixed center border-box;
@@ -483,8 +485,8 @@ h1,h2,h3,h4,h5,h6{
 /* --------- MESSAGE --------- */
 .chat-message{
   display: flex;
+  flex-direction: row;
   margin: .8em 0em;
-  /* align-items: center; */
 }
 .chat-message.friend-message{
   flex-direction: row;
@@ -509,31 +511,46 @@ h1,h2,h3,h4,h5,h6{
   width: 10%;
   flex-direction: column;
   align-items: center;
+  padding: .2rem .6rem;
 }
 .message-content{
-  max-width: 60%;
+  display: flex;
+  flex-direction: column;
+}
+.message-content-text{
   word-break: break-all;
   padding: .5em 1.2em;
 }
-.message-content.friend-content{
+.message-content-text.friend-content{
   background-color: var(--bg-auth-box);
   color: var(---border-input);
-  border-radius: 0rem .7rem .7rem .7rem;
-  margin-left: var(--mg-message-content);
+  border-radius: var(--br-radius-mes-content-fr);
+  margin-right: var(--mg-message-content-text);
 }
-.message-content.owner-content{
+.message-content-text.owner-content{
   background-color: var(--border-input);
   color: var(--bg-auth-box);
-  border-radius: .7rem 0rem .7rem .7rem;
-  margin-right: var(--mg-message-content);
+  border-radius: var(--br-radius-mes-content-ow);
+  margin-left: var(--mg-message-content-text);
 }
-.message-images-box{
+.message-content-images{
   max-width: 100%;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
   grid-gap: .3em;
   grid-template-rows: 1fr;
   grid-auto-flow: dense;
+  padding: 1rem;
+  margin-top: 1rem;
+  background: rgba(0, 0, 0, .2);
+}
+.message-content-images.friend-content{
+  border-radius: var(--br-radius-mes-content-fr);
+  margin-right: var(--mg-message-content-text);
+}
+.message-content-images.owner-content{
+  border-radius: var(--br-radius-mes-content-ow);
+  margin-left: var(--mg-message-content-text);
 }
 .message-image{
   max-width: 100%;
