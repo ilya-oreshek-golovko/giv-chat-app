@@ -1,4 +1,4 @@
-import { ChangeEvent, MouseEvent, useContext, useState } from 'react';
+import { ChangeEvent, MouseEvent, useContext, useRef, useState } from 'react';
 import { BsPaperclip } from 'react-icons/bs';
 import { MdOutlineAddPhotoAlternate } from 'react-icons/md';
 import { IMessage, IUser } from '../../interfaces';
@@ -31,6 +31,8 @@ export default function Input() {
 
   const currentUser : IUser = useContext(AuthContext);
   const chatData = useContext(ChatContext);
+  const imagesInputRef = useRef() as React.RefObject<HTMLInputElement>;
+  const documentsInputRef = useRef() as React.RefObject<HTMLInputElement>;
 
   const [state, setState] = useState<InputState>({
     text: "",
@@ -46,7 +48,10 @@ export default function Input() {
       images: [],
       isModalOpen: false
     });
+    imagesInputRef.current!.value = '';
+    documentsInputRef.current!.value = '';
   }
+  
   
   function inputValidation(){
     if(!chatData?.currentChat?.chatID){
@@ -94,22 +99,20 @@ export default function Input() {
     });
   }
 
-  function getUploadImagesLinks() : Array<string> {
+  async function getUploadImagesLinks() : Promise<string[]>{
     if(state.images.length == 0) return [];
 
-    const imagesStorageLinks : Array<string> = [];
-
-    state.images.forEach( async (imageObj : TImage) => {
+    const promises : Promise<string>[] = state.images.map((imageObj : TImage) => new Promise((resolve) => {
       const fileRef = ref(storage, uuid());
-
-      await uploadBytesResumable(fileRef, imageObj.imgFile).then(() => {
-          getDownloadURL(fileRef).then((imageURLfromStorage) => {
-            imagesStorageLinks.push(imageURLfromStorage);
-          });
+      uploadBytesResumable(fileRef, imageObj.imgFile).then(() => {
+        getDownloadURL(fileRef).then((imageURLfromStorage) => {
+          resolve(imageURLfromStorage);
+        });
       }); 
+    }));
 
-    });
-    
+    const imagesStorageLinks : string[] = await Promise.all(promises);
+
     return imagesStorageLinks;
   }
 
@@ -132,14 +135,14 @@ export default function Input() {
     return documentsStorageLinks;
   }
 
-  function handleSendClick(evt : React.MouseEvent<HTMLButtonElement>){
+  async function handleSendClick(evt : React.MouseEvent<HTMLButtonElement>){
     evt.preventDefault();
 
     if(!inputValidation()) return;
 
-    const imagesStorageLinks : Array<string> = getUploadImagesLinks();
-    const documentsStorageLinks : Array<string> = getUploadDocumentsLinks();
-
+    const imagesStorageLinks : string[] = await getUploadImagesLinks();
+    const documentsStorageLinks : string[] = [];
+    //const documentsStorageLinks = getUploadDocumentsLinks();
     l(`imagesStorageLinks : ${imagesStorageLinks.length}`);
     l(`documentsStorageLinks : ${documentsStorageLinks.length}`);
 
@@ -166,19 +169,24 @@ export default function Input() {
   }
 
   function handleImageChange(evt : ChangeEvent<HTMLInputElement>){
-    l(evt.target.files![0]);
-    if(evt.target.files && evt.target.files[0]){
-      setState(prevState => ({
-        ...prevState, 
-        images: [
-          ...prevState?.images, 
-          {
-            imgFile : evt.target.files![0], 
-            imgLink : URL.createObjectURL(evt.target.files![0])
-          }
-        ]
-      }));
-    }
+    const imageFiles = evt.target.files;
+    if(!imageFiles) return;
+
+    const newImages : Array<TImage> = [];
+    for(let i = 0; i < imageFiles.length; i++){
+      newImages.push({
+        imgFile: imageFiles.item(i)!,
+        imgLink: URL.createObjectURL(imageFiles.item(i)!)
+      });
+    } 
+    l(newImages);
+    setState(prevState => ({
+      ...prevState, 
+      images: [
+        ...prevState?.images, 
+        ...newImages
+      ]
+    }));
   }
 
   function handleModalView(evt : React.MouseEvent<HTMLButtonElement>){
@@ -190,20 +198,25 @@ export default function Input() {
   }
 
   function clearSelectedFiles(listType : string){
-    if(listType == "images") {
-      setState(prevState => ({
-        ...prevState,
-        isModalOpen: false,
-        images: []
-      }));
-    }else if(listType == "documents"){
-      setState(prevState => ({
-        ...prevState,
-        isModalOpen: false,
-        documents: []
-      }));
-    }else{
-      l("Error: unable to define list type to delete selected files");
+    switch(listType){
+      case "images":
+        setState(prevState => ({
+          ...prevState,
+          isModalOpen: false,
+          images: []
+        }));
+        imagesInputRef.current!.value = '';
+        break;
+      case "documents":
+        setState(prevState => ({
+          ...prevState,
+          isModalOpen: false,
+          documents: []
+        }));
+        documentsInputRef.current!.value = '';
+        break;
+      default:
+        l("Error: unable to define list type to delete selected files");
     }
   }
 
@@ -225,7 +238,7 @@ export default function Input() {
         <div className="chat-message-actions-box">
           <label>
               <BsPaperclip className="btn chat-clip-doc"/>
-              <input type="file" className="input-file" accept='.docx' onChange={handleDocumentChange}/>
+              <input type="file" className="input-file" accept='.docx' onChange={handleDocumentChange} multiple ref={documentsInputRef}/>
               {
                 state.documents.length > 0 &&
                 <button className="chat-btn-preview-files" onClick={handleModalView}>{state.documents.length}</button>
@@ -233,7 +246,7 @@ export default function Input() {
           </label>
           <label>
               <MdOutlineAddPhotoAlternate className="btn chat-clip-image"/>
-              <input type="file" className="input-file" accept='image/*' onChange={handleImageChange}/>
+              <input type="file" id="selected-imageg" className="input-file" accept='image/*' onChange={handleImageChange} ref={imagesInputRef} multiple/>
               {
                 state.images.length > 0 &&
                 <button className="chat-btn-preview-files" onClick={handleModalView}>{state.images.length}</button>

@@ -27,26 +27,24 @@ export default function Message({message} : {message : IMessage}) {
         <img src={currentUser.uid == message.senderID ? currentUser.photoURL : chatData?.currentChat?.user.photoURL} alt="profile-img" className="message-profile-img" />
         <div className="message-date-time">{getMessageDate()}</div>
       </div>
-      <div className="message-content">
-        {
-          message.text &&
-          <p className={"message-content-text " + (currentUser.uid == message.senderID ? "owner-content" : "friend-content")}>
-            {message.text}
-          </p>
-        }
-        {
-          message.images?.length > 0 &&
-          <div className={"message-content-images " + (currentUser.uid == message.senderID ? "owner-content" : "friend-content")}>
-            {
-              message.images.map((imageLink : string) => (
-                <div className="message-image-container">
-                  <img src={imageLink} alt="message-img" className="message-image" />
-                </div>
-              ))    
-            }
-          </div>
-        }
-      </div>
+      {
+        message.text &&
+        <p className={"message-content " + (currentUser.uid == message.senderID ? "owner-content" : "friend-content")}>
+          {message.text}
+        </p>
+      }
+      {
+        message.images?.length > 0 &&
+        <div className="message-images">
+          {
+            message.images.map((imageLink : string) => (
+              <div className="message-image-container">
+                <img src={imageLink} alt="message-img" className="message-image" />
+              </div>
+            ))    
+          }
+        </div>
+      }
     </div>
   )
 }
