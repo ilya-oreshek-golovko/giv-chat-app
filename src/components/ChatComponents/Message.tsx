@@ -7,6 +7,8 @@ export default function Message({message} : {message : IMessage}) {
 
   const currentUser = useContext(AuthContext);
   const chatData    = useContext(ChatContext);
+  const imagesToView = 5;
+  const docsToView = 5;
 
   const ref = useRef() as React.RefObject<HTMLInputElement>;
 
@@ -20,6 +22,21 @@ export default function Message({message} : {message : IMessage}) {
   }
 
   console.log(message);
+
+  const ImagesOutput = () => {
+    const imagesForOutput = message.images.splice(0, imagesToView);
+    return(
+      <div className={"message-content-images " + (currentUser.uid == message.senderID ? "owner-content" : "friend-content")}>
+        {
+          imagesForOutput.map((imageLink : string) => (
+            <div className="message-image-container">
+              <img src={imageLink} alt="message-img" className="message-image" />
+            </div>
+          ))    
+        }
+      </div>
+    )
+  }
 
   return (
     <div className={"chat-message " + (currentUser.uid == message.senderID ? "owner-message" : "friend-message")}>
@@ -36,15 +53,7 @@ export default function Message({message} : {message : IMessage}) {
           }
           {
             message.images?.length > 0 &&
-            <div className={"message-content-images " + (currentUser.uid == message.senderID ? "owner-content" : "friend-content")}>
-              {
-                message.images.map((imageLink : string) => (
-                  <div className="message-image-container">
-                    <img src={imageLink} alt="message-img" className="message-image" />
-                  </div>
-                ))    
-              }
-            </div>
+            <ImagesOutput />
           }
         </div>
     </div>

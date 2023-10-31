@@ -10,6 +10,9 @@ import { ChatContext } from '../../context/ChatContext';
 import { v4 as uuid } from "uuid"; 
 import { Timestamp } from 'firebase/firestore';
 import SelectedFiles from './SelectedFiles';
+import Modal from '../Modal';
+import LoadingSpinner from '../LoadingSpinner';
+import WaitingSpinner from '../WaitingSpinner';
 
 const l = (mes : any) => console.log("Input: ", mes);
 
@@ -25,7 +28,8 @@ type InputState = {
   text : string,
   images : Array<TImage>,
   documents: Array<TDocument>,
-  isModalOpen: boolean
+  isModalOpen: boolean,
+  isSendClicked : boolean
 }
 export default function Input() {
 
@@ -38,15 +42,24 @@ export default function Input() {
     text: "",
     images : [],
     documents: [],
-    isModalOpen : false
+    isModalOpen : false,
+    isSendClicked : false
   });
+
+  function toggleWaitingSpinner(){
+    setState(prevState => ({
+      ...prevState,
+      isSendClicked: !prevState.isSendClicked
+    }));
+  }
 
   function clearInputFiels(){
     setState({
       text: "",
       documents : [],
       images: [],
-      isModalOpen: false
+      isModalOpen: false,
+      isSendClicked : false
     });
     imagesInputRef.current!.value = '';
     documentsInputRef.current!.value = '';
@@ -137,17 +150,21 @@ export default function Input() {
 
   async function handleSendClick(evt : React.MouseEvent<HTMLButtonElement>){
     evt.preventDefault();
-
     if(!inputValidation()) return;
 
-    const imagesStorageLinks : string[] = await getUploadImagesLinks();
-    const documentsStorageLinks : string[] = [];
-    //const documentsStorageLinks = getUploadDocumentsLinks();
-    l(`imagesStorageLinks : ${imagesStorageLinks.length}`);
-    l(`documentsStorageLinks : ${documentsStorageLinks.length}`);
+    try{
+      toggleWaitingSpinner();
+      const imagesStorageLinks : string[] = await getUploadImagesLinks();
+      const documentsStorageLinks : string[] = [];
+      //const documentsStorageLinks = getUploadDocumentsLinks();
+      l(`imagesStorageLinks : ${imagesStorageLinks.length}`);
+      l(`documentsStorageLinks : ${documentsStorageLinks.length}`);
 
-    saveMessage(imagesStorageLinks, documentsStorageLinks);
-    updateLastMessageForUsers();
+      saveMessage(imagesStorageLinks, documentsStorageLinks);
+      updateLastMessageForUsers();
+    }catch(e : any){
+      l(e.message);
+    }
     
     clearInputFiels();
   }
@@ -228,7 +245,11 @@ export default function Input() {
           <img src={state.imgDisplay} alt="preview" className='chat-footer-img-pereview'/>
         </div>
       } */}
-        <input type="text" className="chat-message-input" placeholder='Type a message' value={state?.text} onChange={(e) => setState(prevState => ({...prevState, text: e.target.value}))}/>
+        <input type="text" 
+              className="chat-message-input" 
+              placeholder='Type a message' 
+              value={state?.text} 
+              onChange={(e) => setState(prevState => ({...prevState, text: e.target.value}))}/>
         {/* {
           inputError &&
           <div className="chat-footer-error">
@@ -252,7 +273,11 @@ export default function Input() {
                 <button className="chat-btn-preview-files" onClick={handleModalView}>{state.images.length}</button>
               }
           </label>
-          <button className="btn chat-btn-send-message" onClick={handleSendClick}>Send</button>
+          {
+            state.isSendClicked 
+            ? <WaitingSpinner />
+            : <button className="btn chat-btn-send-message" onClick={handleSendClick}>Send</button>
+          }
         </div>
 
         <SelectedFiles modalState={state.isModalOpen} images={state.images} documents={state.documents} handleModalView={handleModalView} clearSelectedFiles={clearSelectedFiles} />

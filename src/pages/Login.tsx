@@ -2,6 +2,8 @@ import { SyntheticEvent, useRef, useState } from "react";
 import {logInWithEmailAndPassword} from '../firebase/auth';
 import { useNavigate, Link } from "react-router-dom";
 import { register as rRegister, start as rStart } from '../routing';
+import Modal from "../components/Modal";
+import LoadingSpinner from "../components/LoadingSpinner";
 
 export default function Login() {
   const email = useRef() as React.RefObject<HTMLInputElement>;
@@ -11,6 +13,7 @@ export default function Login() {
     passError: string
   }
 
+  const [modalView, setModalView] = useState<boolean>(false);
   const [stateErrors, setStateErrors] = useState<LoginError>({
     emailError: "",
     passError: ""
@@ -42,8 +45,11 @@ export default function Login() {
     if(!validation()) {
       return null;
     };
+    setModalView(prevState => !prevState);
 
     const result = await logInWithEmailAndPassword(email.current?.value!, password.current?.value!);
+    
+    setModalView(prevState => !prevState);
     
     if(typeof result !== "object"){
       alert(`Error: ${result}`);
@@ -54,6 +60,12 @@ export default function Login() {
 
   return (
     <form className="auth-box" onSubmit={onFormSubmit}>
+        {
+          modalView &&
+          <Modal isOpen={modalView}>
+              <LoadingSpinner />
+          </Modal>
+        }
         <h1 className="auth-box-title">GIV Chat</h1>
         <div className="auth-box-type">Login</div>
         <div className='input-field-box'>

@@ -5,6 +5,7 @@ import Login from "./pages/Login";
 import Home from "./pages/Home";
 import * as routing from './routing';
 import { AuthContext } from "./context/AuthContext";
+import Wrapper from "./components/Wrapper";
 
 export default function App() {
   
@@ -24,12 +25,14 @@ export default function App() {
       <Routes>
           <Route path={routing.start}>
             <Route index element={<ProtectedRoute>
-              <Home />
+              <Wrapper>
+                <Home />
+              </Wrapper> 
             </ProtectedRoute>} />
-            <Route path={routing.register} element={<Register />} />
-            <Route path={routing.login} element={<Login />} /> 
+            <Route path={routing.register} element={<Wrapper><Register /></Wrapper>} />
+            <Route path={routing.login} element={<Wrapper><Login /></Wrapper>} /> 
           </Route>
-        </Routes>
+      </Routes>
     </div>
   );
 }

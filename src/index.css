@@ -54,12 +54,12 @@ h1,h2,h3,h4,h5,h6{
 .btn:hover{
   transform: scale(1.05);
 }
-
-.app{
+.wrapper{
   display: flex;
   height: 100vh;
   justify-content: center;
   align-items: center;
+  background-color: transparent;
 }
 .app-loading-page{
   height: 100vh;
@@ -577,6 +577,7 @@ h1,h2,h3,h4,h5,h6{
   text-align: center;
   font-size: 2rem;
   font-weight: 600;
+  padding: .5rem 0px;
   color: white;
   text-transform: capitalize;
 }
@@ -584,6 +585,9 @@ h1,h2,h3,h4,h5,h6{
 .selected-files-items-box{
   display: flex;
   flex-direction: row;
+  flex-wrap: wrap;
+  flex-grow: 1;
+  overflow: auto;
   padding: 1rem;
 }
 .selected-files-items-box > * + *{
@@ -592,6 +596,7 @@ h1,h2,h3,h4,h5,h6{
 .selected-files-item{
   display: flex;
   flex-direction: column;
+  flex-grow: 1;
   align-items: center;
   width: 20%;
 }
@@ -613,8 +618,9 @@ h1,h2,h3,h4,h5,h6{
   word-break: break-all;
 }
 .selected-files-btn-box{
-  margin-top: auto;
+  /* margin-top: auto; added flex-grow: 1; to flex-container*/
   display: flex;
+  padding: .5rem 0px;
   justify-content: center;
   align-items: center;
 }
@@ -647,6 +653,7 @@ h1,h2,h3,h4,h5,h6{
   display: flex;
   justify-content: center;
   align-items: center;
+  background: rgba(0,0,0, .4);
 }
 
 /* --------- Confirmation Box --------- */
@@ -687,6 +694,64 @@ h1,h2,h3,h4,h5,h6{
 .confirmation-btn-box > * + *{
   margin-left: .5rem;
 }
+
+/* --------- SPINNER --------- */
+.loading-spinner{
+  width: 100px;
+  height: 100px;
+  border: 6px solid;
+  border-color: white transparent white transparent;
+  border-radius: 50%;
+  animation: spinner 1s linear infinite;
+}
+
+@keyframes spinner {
+  to{
+    transform: rotate(360deg);
+  }
+}
+
+/* --------- Waiting Spinner --------- */
+.waiting-spinner{
+  height: 30px;
+  width: 30px;
+  position: relative;
+}
+.waiting-spinner span{
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  transform: rotate(calc(18deg * var(--index)));
+}
+.waiting-spinner span::before{
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background-color: var(--border-input);
+  box-shadow: 0 0 10px var(--border-input),
+              0 0 20px var(--border-input),
+              0 0 40px var(--border-input),
+              0 0 60px var(--border-input),
+              0 0 80px var(--border-input),
+              0 0 100px var(--border-input);
+  animation: waiting-sp-animation 1.5s linear infinite;
+  animation-delay: calc(0.1s * var(--index));
+}
+@keyframes waiting-sp-animation {
+  0%{
+    transform: scale(1);
+  }
+  80%,100%{
+    transform: scale(0);
+  }
+}
+
 
 /* --------- MEDIA --------- */
 @media screen and (max-width: 75rem) {  /* 1200 */
