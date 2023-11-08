@@ -26,8 +26,10 @@ export function ChatContextProvider({children} : {children : any}){
         }
     }, [currentUser?.uid])
 
+    const value = {currentChat, setCurrentChat};
+
     return(
-        <ChatContext.Provider value={{currentChat, setCurrentChat}}>
+        <ChatContext.Provider value={value}>
             {children}
         </ChatContext.Provider>
     )

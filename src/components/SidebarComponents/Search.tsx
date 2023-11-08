@@ -16,7 +16,7 @@ type TSearch = {
 const l = (mes : any) => console.log(mes);
 
 export default function Search() {
-  
+  console.log("SEARCH");
   const userToFind = useRef() as RefObject<HTMLInputElement>;
 
   const [state, setState] = useState<TSearch>({
@@ -31,7 +31,8 @@ export default function Search() {
     setState({
       error : "",
       users : []
-    })
+    });
+    userToFind.current!.value = "";
   }
 
   async function handleSearch() {
@@ -75,39 +76,52 @@ export default function Search() {
   }
 
   async function handleSelect(user : IUser) {
-    l("Test");
-    const combinedID = getCombinedChatID(currentUser.uid, user.uid);
-    
     try{
-      const chatObj = await getChat(combinedID);
+      const isSelectedFriendAlreadyinChat = () : boolean =>{
+        if(!chatObj.exists()) return false;
+    
+        if(cChat?.currentChat?.chatID !== chatID){
+          cChat?.setCurrentChat({
+              chatID: chatID,
+              user: friendInfo
+          });
+        }
+        clearState();
+    
+        return true;
+      }
 
-      if(chatObj.exists()) return;
+      const chatID = getCombinedChatID(currentUser.uid, user.uid);
+      const chatObj = await getChat(chatID);
 
-      await createChat(combinedID);
+      const friendInfo : IUserInfoHeader = {
+        name: user.name,
+        photoURL: user.photoURL,
+        uid: user.uid
+      };
+      if(isSelectedFriendAlreadyinChat()) return;
+
+      await createChat(chatID);
       l("Chat was created!");
 
       await updateChatHeader(currentUser.uid, {
-        [combinedID + ".userInfo"] : {
-          name: user.name,
-          photoURL: user.photoURL,
-          uid: user.uid
-        } as IUserInfoHeader,
-        [combinedID + ".date"] : serverTimestamp()
+        [chatID + ".userInfo"] : friendInfo as IUserInfoHeader,
+        [chatID + ".date"] : serverTimestamp()
       });
       l("Chat Header(currentUser) was created!");
 
       await updateChatHeader(user.uid, {
-        [combinedID + ".userInfo"] : {
+        [chatID + ".userInfo"] : {
           name: currentUser.displayName,
           photoURL: currentUser.photoURL,
           uid: currentUser.uid
         } as IUserInfoHeader,
-        [combinedID + ".date"] : serverTimestamp()
+        [chatID + ".date"] : serverTimestamp()
       });
       l("Chat Header(user) was created!");
 
       cChat?.setCurrentChat({
-          chatID: combinedID,
+          chatID: chatID,
           user: {
             name: user.name,
             photoURL: user.photoURL,
@@ -124,7 +138,10 @@ export default function Search() {
 
   return (
     <div className='home-search'>
-      <input type="text" ref={userToFind} onKeyDown={handleUserInput} className='search-input' placeholder='Find a friend'/>
+      <div className="search-input-box">
+        <input type="text" ref={userToFind} onKeyDown={handleUserInput} className='search-input' placeholder='Find a friend'/>
+        <p className="btn-clear-search-result" onClick={() => clearState()}>x</p>
+      </div>
       {
         state.error && <ErrorHandler message={state.error} />
       }

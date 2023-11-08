@@ -10,9 +10,15 @@ export default function Chat() {
 
   return (
     <div className='home-chat'>
-      <ChatHeader currentInterlocutorName={chatObj?.currentChat?.user.name != undefined ? chatObj.currentChat.user.name : ""}/>
+      <ChatHeader currentInterlocutorName={
+        chatObj?.currentChat?.user.name != undefined 
+        ? chatObj.currentChat.user.name 
+        : ""
+      }/>
       <Messages />
-      <Input />
+      {
+        chatObj?.currentChat?.chatID && <Input />
+      }
     </div>
   )
 }

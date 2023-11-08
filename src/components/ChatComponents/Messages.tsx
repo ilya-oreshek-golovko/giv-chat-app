@@ -7,9 +7,6 @@ export default function Messages() {
 
   const cChat = useContext(ChatContext);
   const messages = useMessages();
-
-  console.log("messages");
-  console.log(messages);
   return (
     <div className={'chat-main' + (cChat?.currentChat == undefined ? ' empty-chat' : '')}>
       {

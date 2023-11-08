@@ -1,4 +1,4 @@
-import { ChangeEvent, MouseEvent, useContext, useRef, useState } from 'react';
+import { ChangeEvent, useContext, useRef } from 'react';
 import { BsPaperclip } from 'react-icons/bs';
 import { MdOutlineAddPhotoAlternate } from 'react-icons/md';
 import { IMessage, IUser } from '../../interfaces';
@@ -9,28 +9,12 @@ import { storage } from '../../firebase/firebase';
 import { ChatContext } from '../../context/ChatContext';
 import { v4 as uuid } from "uuid"; 
 import { Timestamp } from 'firebase/firestore';
-import SelectedFiles from './SelectedFiles';
-import Modal from '../Modal';
-import LoadingSpinner from '../LoadingSpinner';
 import WaitingSpinner from '../WaitingSpinner';
+import { SelectedFilesContext } from '../../context/SelectedFilesContext';
+import { InputState, TDocument, TImage } from '../../types';
+import { useStoredChatFiles } from '../../hooks/hooks';
 
 const l = (mes : any) => console.log("Input: ", mes);
-
-export type TDocument = {
-  docFile : File,
-  docLink : string
-}
-export type TImage = {
-  imgFile : File,
-  imgLink : string
-}
-type InputState = {
-  text : string,
-  images : Array<TImage>,
-  documents: Array<TDocument>,
-  isModalOpen: boolean,
-  isSendClicked : boolean
-}
 export default function Input() {
 
   const currentUser : IUser = useContext(AuthContext);
@@ -38,14 +22,10 @@ export default function Input() {
   const imagesInputRef = useRef() as React.RefObject<HTMLInputElement>;
   const documentsInputRef = useRef() as React.RefObject<HTMLInputElement>;
 
-  const [state, setState] = useState<InputState>({
-    text: "",
-    images : [],
-    documents: [],
-    isModalOpen : false,
-    isSendClicked : false
-  });
+  const {setStateF} = useContext(SelectedFilesContext);
 
+  const {state, setState} = useStoredChatFiles(chatData, saveFilesLocaly);
+  
   function toggleWaitingSpinner(){
     setState(prevState => ({
       ...prevState,
@@ -58,7 +38,6 @@ export default function Input() {
       text: "",
       documents : [],
       images: [],
-      isModalOpen: false,
       isSendClicked : false
     });
     imagesInputRef.current!.value = '';
@@ -112,12 +91,23 @@ export default function Input() {
     });
   }
 
+  function getFileName(prefix : string){
+    const currentdate = new Date();
+    return prefix + 
+          + currentdate.getDate().toString() 
+          + (currentdate.getMonth()+1).toString() 
+          + currentdate.getFullYear() + "_" 
+          + currentdate.getHours()  
+          + currentdate.getMinutes() 
+          + currentdate.getSeconds();
+  }
+
   async function getUploadImagesLinks() : Promise<string[]>{
     if(state.images.length == 0) return [];
 
     const promises : Promise<string>[] = state.images.map((imageObj : TImage) => new Promise((resolve) => {
-      const fileRef = ref(storage, uuid());
-      uploadBytesResumable(fileRef, imageObj.imgFile).then(() => {
+      const fileRef = ref(storage, getFileName("img_"));
+      uploadBytesResumable(fileRef, imageObj.imgFile!).then(() => {
         getDownloadURL(fileRef).then((imageURLfromStorage) => {
           resolve(imageURLfromStorage);
         });
@@ -129,34 +119,32 @@ export default function Input() {
     return imagesStorageLinks;
   }
 
-  function getUploadDocumentsLinks() : Array<string> {
+  async function getUploadDocumentsLinks() : Promise<string[]> {
     if(state.documents.length == 0) return [];
 
-    const documentsStorageLinks : Array<string> = [];
-
-    state.documents.forEach( async (docObj : TDocument) => {
-      const fileRef = ref(storage, uuid());
-
-      await uploadBytesResumable(fileRef, docObj.docFile).then(() => {
+    const promises : Promise<string>[] = state.documents.map( (docObj : TDocument) => new Promise((resolve) => {
+      const fileRef = ref(storage, getFileName("doc_"));
+      uploadBytesResumable(fileRef, docObj.docFile!).then(() => {
           getDownloadURL(fileRef).then((docURLfromStorage) => {
-            documentsStorageLinks.push(docURLfromStorage);
+            resolve(docURLfromStorage);
           });
-      }); 
-
-    });
+      });
+    })); 
     
+    const documentsStorageLinks : Array<string> = await Promise.all(promises);
+
     return documentsStorageLinks;
   }
 
-  async function handleSendClick(evt : React.MouseEvent<HTMLButtonElement>){
-    evt.preventDefault();
+  async function handleSendClick(){
+
     if(!inputValidation()) return;
 
     try{
       toggleWaitingSpinner();
       const imagesStorageLinks : string[] = await getUploadImagesLinks();
-      const documentsStorageLinks : string[] = [];
-      //const documentsStorageLinks = getUploadDocumentsLinks();
+      const documentsStorageLinks : string[] = await getUploadDocumentsLinks();
+
       l(`imagesStorageLinks : ${imagesStorageLinks.length}`);
       l(`documentsStorageLinks : ${documentsStorageLinks.length}`);
 
@@ -170,19 +158,25 @@ export default function Input() {
   }
 
   function handleDocumentChange(evt : ChangeEvent<HTMLInputElement>){
-    l(evt.target.files![0]);
-    if(evt.target.files && evt.target.files[0]){
-      setState(prevState => ({
-        ...prevState, 
-        documents: [
-          ...prevState?.documents, 
-          {
-            docFile : evt.target.files![0], 
-            docLink : URL.createObjectURL(evt.target.files![0])
-          }
-        ]
-      }));
+    const documentsFile = evt.target.files;
+    if(!documentsFile) return;
+
+    const newDocuments : TDocument[] = [];
+    for(let i = 0; i < documentsFile.length; i++){
+      newDocuments.push({
+        docFile : documentsFile[i], 
+        docLink : URL.createObjectURL(documentsFile[i])
+      });
     }
+
+    const newState = {
+      ...state, 
+      documents: [
+        ...state?.documents, 
+        ...newDocuments
+      ]
+    }
+    setState(newState);
   }
 
   function handleImageChange(evt : ChangeEvent<HTMLInputElement>){
@@ -196,22 +190,29 @@ export default function Input() {
         imgLink: URL.createObjectURL(imageFiles.item(i)!)
       });
     } 
-    l(newImages);
-    setState(prevState => ({
-      ...prevState, 
+    const newState = {
+      ...state, 
       images: [
-        ...prevState?.images, 
+        ...state?.images, 
         ...newImages
       ]
-    }));
+    }
+    setState(newState);
   }
 
-  function handleModalView(evt : React.MouseEvent<HTMLButtonElement>){
-    evt.preventDefault();
-    setState(prevState => ({
-      ...prevState,
-      isModalOpen: !prevState.isModalOpen
-    }));
+  function saveFilesLocaly(newState : InputState){
+    if(!chatData?.currentChat?.chatID) return;
+    console.log(JSON.stringify(newState));
+    localStorage.setItem(chatData?.currentChat?.chatID, JSON.stringify(newState))
+  }
+
+  function handleModalView({images = [], documents = []} : {images? : Array<TImage>, documents? : Array<TDocument>}){
+    setStateF({
+      images,
+      documents,
+      isOpen: true,
+      clearSelectedFiles: clearSelectedFiles
+    });
   }
 
   function clearSelectedFiles(listType : string){
@@ -219,7 +220,6 @@ export default function Input() {
       case "images":
         setState(prevState => ({
           ...prevState,
-          isModalOpen: false,
           images: []
         }));
         imagesInputRef.current!.value = '';
@@ -227,7 +227,6 @@ export default function Input() {
       case "documents":
         setState(prevState => ({
           ...prevState,
-          isModalOpen: false,
           documents: []
         }));
         documentsInputRef.current!.value = '';
@@ -235,6 +234,22 @@ export default function Input() {
       default:
         l("Error: unable to define list type to delete selected files");
     }
+
+    setStateF(prevState => ({
+      ...prevState,
+      isOpen: false
+    }));
+  }
+
+  function handleUserInput(evt : React.KeyboardEvent<HTMLInputElement>){
+    evt.code == "Enter" && handleSendClick();
+  }
+
+  function handleTextChange(evt: ChangeEvent<HTMLInputElement>): void {
+    setState(prevState => ({
+      ...prevState, 
+      text: evt.target.value
+    }))
   }
 
   return (
@@ -249,7 +264,8 @@ export default function Input() {
               className="chat-message-input" 
               placeholder='Type a message' 
               value={state?.text} 
-              onChange={(e) => setState(prevState => ({...prevState, text: e.target.value}))}/>
+              onChange={handleTextChange}
+              onKeyDown={handleUserInput}/>
         {/* {
           inputError &&
           <div className="chat-footer-error">
@@ -259,10 +275,10 @@ export default function Input() {
         <div className="chat-message-actions-box">
           <label>
               <BsPaperclip className="btn chat-clip-doc"/>
-              <input type="file" className="input-file" accept='.docx' onChange={handleDocumentChange} multiple ref={documentsInputRef}/>
+              <input type="file" className="input-file" accept='.docx' onChange={handleDocumentChange} ref={documentsInputRef} multiple/>
               {
                 state.documents.length > 0 &&
-                <button className="chat-btn-preview-files" onClick={handleModalView}>{state.documents.length}</button>
+                <button className="btn-chat-preview-files" onClick={() => handleModalView({documents : state.documents}) }>{state.documents.length}</button>
               }
           </label>
           <label>
@@ -270,7 +286,7 @@ export default function Input() {
               <input type="file" id="selected-imageg" className="input-file" accept='image/*' onChange={handleImageChange} ref={imagesInputRef} multiple/>
               {
                 state.images.length > 0 &&
-                <button className="chat-btn-preview-files" onClick={handleModalView}>{state.images.length}</button>
+                <button className="btn-chat-preview-files" onClick={() => handleModalView({images : state.images}) }>{state.images.length}</button>
               }
           </label>
           {
@@ -279,8 +295,6 @@ export default function Input() {
             : <button className="btn chat-btn-send-message" onClick={handleSendClick}>Send</button>
           }
         </div>
-
-        <SelectedFiles modalState={state.isModalOpen} images={state.images} documents={state.documents} handleModalView={handleModalView} clearSelectedFiles={clearSelectedFiles} />
     </div>
   )
 }

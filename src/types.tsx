@@ -8,11 +8,41 @@ type FriendProps = {
     handleObjClick: MouseEventHandler<HTMLDivElement>
 }
 type RegisterError = {
-    userNameError: string,
-    emailError: string,
-    passError: string,
-    confirmPassError: string,
-    profileImgErr : string
+    eUserName: string,
+    eEmail: string,
+    ePassword: string,
+    eConfirmPassword: string,
+    eProfileImg : string
+}
+type TDocument = {
+    docFile? : File,
+    docLink : string
+}
+type TImage = {
+    imgFile? : File,
+    imgLink : string
+}
+type InputState = {
+    text : string,
+    images : Array<TImage>,
+    documents: Array<TDocument>,
+    isSendClicked : boolean
+}
+type TModalView = {
+    isOpen : boolean,
+    children : JSX.Element | null
+}
+type TRegisterInput = {
+    userName : string,
+    email : string,
+    password : string,
+    confirmPass : string,
+    profile : File | null,
+}
+type TRegisterState = {
+    errors : RegisterError,
+    modal: TModalView,
+    input: TRegisterInput
 }
 
-export type {FriendProps, RegisterError}
+export type {FriendProps, RegisterError, TDocument, TImage, InputState, TModalView, TRegisterInput, TRegisterState}

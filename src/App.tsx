@@ -6,10 +6,12 @@ import Home from "./pages/Home";
 import * as routing from './routing';
 import { AuthContext } from "./context/AuthContext";
 import Wrapper from "./components/Wrapper";
+import { useLocalStorageClearing } from "./hooks/hooks";
 
 export default function App() {
   
   const currentUser = useContext(AuthContext);
+  useLocalStorageClearing();
 
   const ProtectedRoute = ({children} : {children : any}) => {
     console.log("APP: Current User " + currentUser);
@@ -25,12 +27,10 @@ export default function App() {
       <Routes>
           <Route path={routing.start}>
             <Route index element={<ProtectedRoute>
-              <Wrapper>
-                <Home />
-              </Wrapper> 
+              <Home />
             </ProtectedRoute>} />
-            <Route path={routing.register} element={<Wrapper><Register /></Wrapper>} />
-            <Route path={routing.login} element={<Wrapper><Login /></Wrapper>} /> 
+            <Route path={routing.register} element={<Register />} />
+            <Route path={routing.login} element={<Login />} /> 
           </Route>
       </Routes>
     </div>

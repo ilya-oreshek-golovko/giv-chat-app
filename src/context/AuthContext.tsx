@@ -1,6 +1,8 @@
 import { onAuthStateChanged } from "firebase/auth";
 import { createContext, useEffect, useState } from "react";
 import { auth } from "../firebase/firebase";
+import LoadingSpinner from "../components/LoadingSpinner";
+import Modal from "../components/Modal";
 
 export const AuthContext = createContext<any>(null);
 
@@ -21,7 +23,13 @@ export function AuthContextProvider({children} : {children : any}){
 
     return(
         <AuthContext.Provider value={currentUser}>
-            {isLoading ? <div className="app-loading-page">Loading...</div> : children}
+            {isLoading 
+            ? 
+            <Modal isOpen={isLoading}>
+              <LoadingSpinner />
+            </Modal> 
+            : 
+            children}
         </AuthContext.Provider>
     );
 }

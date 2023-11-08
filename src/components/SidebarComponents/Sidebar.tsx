@@ -7,6 +7,8 @@ import { logout } from "../../firebase/auth";
 import {login} from '../../routing';
 import {AiOutlineArrowLeft, AiOutlineArrowRight} from 'react-icons/ai'
 import Friends from './Friends';
+import { ChatContext } from '../../context/ChatContext';
+import {useContext} from 'react';
 
 export default function Sidebar() {
 
@@ -28,12 +30,12 @@ export default function Sidebar() {
         <Search />
         <Friends />
         <div className="sidebar-footer">
-            <button className='sidebar-btn-logout color-1' onClick={onLogoutHandler}>Logout</button>
+            <button className='btn-sidebar-logout color-1' onClick={onLogoutHandler}>Logout</button>
         </div>
         {
             isSidebarOpen 
-            ? <AiOutlineArrowLeft className='sidebar-btn-toggle open' onClick={toggleSidebar}/>
-            : <AiOutlineArrowRight className="sidebar-btn-toggle closed" onClick={toggleSidebar}/>
+            ? <AiOutlineArrowLeft className='btn-sidebar-toggle open' onClick={toggleSidebar}/>
+            : <AiOutlineArrowRight className="btn-sidebar-toggle closed" onClick={toggleSidebar}/>
         }
     </div>
   )

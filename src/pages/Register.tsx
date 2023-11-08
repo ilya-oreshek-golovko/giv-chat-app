@@ -1,8 +1,8 @@
-import { SyntheticEvent, useRef, useState } from "react";
+import { SyntheticEvent, useEffect, useRef, useState } from "react";
 import { login } from "../routing";
 import { addUser, registerWithEmailAndPassword } from "../firebase/auth";
 import { useNavigate, Link } from "react-router-dom";
-import { RegisterError } from "../types";
+import { RegisterError, TModalView, TRegisterState } from "../types";
 import { ImFilePicture } from "react-icons/im"
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import {updateProfile} from 'firebase/auth';
@@ -10,6 +10,8 @@ import { storage } from "../firebase/firebase";
 import { createUserChat } from "../firebase/chat";
 import Modal from "../components/Modal";
 import LoadingSpinner from "../components/LoadingSpinner";
+import ViewImage from "../components/ViewImage";
+import { useStoredRegisterData } from "../hooks/hooks";
 
 export const ErrorHandler = ({message} : {message : string}) => {
     if(!message) return null;
@@ -21,76 +23,76 @@ export const ErrorHandler = ({message} : {message : string}) => {
     );
 }
 
+const l = (mes : any) => console.log(mes);
 export function Register() {
+
+    type TInputComponent = {
+        inputLabel : string, 
+        inputID : string, 
+        errorMessage : string, 
+        propName : string,
+        inputValue : string,
+        inputType : string
+    };
+    const possibleErrors = {
+        "emptyName" : "Name is empty",
+        "emptyEmail" : "Email is empty",
+        "emptyPass" : "passwordRef is empty",
+        "emptyConfPass" : "Please confirm entered password",
+        "passMismatch" : "Passwords don't match. Plese try again",
+        "emptyProf" : "Please select your profile image",
+        "profImgError" : "By some reason it is impossible to select a profile. Please try again or contact system administrator"
+    }
+
+    const {state, setState} = useStoredRegisterData();
+    console.log()
     const navigation = useNavigate();
 
-    const userNameRef = useRef() as React.RefObject<HTMLInputElement>;
-    const emailRef = useRef() as React.RefObject<HTMLInputElement>;
-    const passwordRef = useRef() as React.RefObject<HTMLInputElement>;
-    const confrimPasswordRef = useRef() as React.RefObject<HTMLInputElement>;
-    const photoFileRef = useRef() as React.RefObject<HTMLInputElement>;
-
-    // const [photo, setState] = useState<TRegister>();
-    //let photoFile : File;
-    const l = (mes : any) => console.log(mes);
-
-    const [modalView, setModalView] = useState<boolean>(false);
-    const [stateErrors, setStateErrors] = useState<RegisterError>({
-        userNameError: "",
-        emailError: "",
-        passError: "",
-        confirmPassError: "",
-        profileImgErr: ""
-    });
-
     function resetErrors(){
-        setStateErrors({
-            emailError: "",
-            userNameError: "",
-            passError: "",
-            confirmPassError: "",
-            profileImgErr: ""
-        });
+        setState(prevState => 
+            ({
+                ...prevState,
+                errors: {
+                    eEmail: "",
+                    eUserName: "",
+                    ePassword: "",
+                    eConfirmPassword: "",
+                    eProfileImg: ""
+                }
+            })
+        );
+    }
+
+    function updateStateErrors(propName : string, errorMessage : string){
+        setState(prevState => ({
+            ...prevState,
+            errors : {
+                ...prevState.errors,
+                [propName]: errorMessage
+            }
+        }));
     }
 
     function validation(){
         resetErrors();
 
-        if(!userNameRef.current?.value){
-            setStateErrors(errors => ({
-                ...errors,
-                confirmPassError: "Name is empty"
-            }));
+        if(!state.input.userName){
+            updateStateErrors("eUserName", possibleErrors["emptyName"]);
             return false;
-        } else if(!emailRef.current?.value){
-            setStateErrors(errors => ({
-                ...errors,
-                confirmPassError: "Email is empty"
-            }));
+        } else if(!state.input.email){
+            updateStateErrors("eEmail", possibleErrors["emptyEmail"]);
             return false;
-        }else if(!passwordRef.current?.value){
-            setStateErrors(errors => ({
-                ...errors,
-                passError: "passwordRef is empty"
-            }));
+        }else if(!state.input.password){
+            updateStateErrors("ePassword", possibleErrors["emptyPass"]);
             return false;
-        }else if(!confrimPasswordRef.current?.value){
-            setStateErrors(errors => ({
-                ...errors,
-                confirmPassError: "Confirm passwordRef please"
-            }));
+        }else if(!state.input.confirmPass){
+            updateStateErrors("eConfirmPassword", possibleErrors["emptyConfPass"]);
             return false;
-        } else if(confrimPasswordRef.current?.value !== passwordRef.current?.value){
-            setStateErrors(errors => ({
-                ...errors,
-                confirmPassError: "Passwords don't match. Plese try again"
-            }));
+        } else if(state.input.confirmPass !== state.input.password){
+            updateStateErrors("eConfirmPassword", possibleErrors["passMismatch"]);
             return false;
-        }else if(!photoFileRef.current?.files){
-            setStateErrors(errors => ({
-                ...errors,
-                profileImgErr: "Please select your profile image"
-            }));
+        }else if(!state.input.profile){
+            updateStateErrors("eProfileImg", possibleErrors["emptyProf"]);
             return false;
         }
 
@@ -100,20 +102,24 @@ export function Register() {
     async function onFormSubmit(evt : SyntheticEvent<HTMLFormElement, SubmitEvent>){
         evt.preventDefault();
 
-        setModalView(prevState => !prevState);
+        setState(prevState => ({
+            ...prevState,
+            modal : {
+                isOpen : true,
+                children : (
+                    <Modal isOpen={true}>
+                        <LoadingSpinner />
+                    </Modal>
+                    )
+            }
+        }));
 
         if(!validation()){
             l("Some of the values are undefined");
             return null;
         }
-
-        const email = emailRef.current?.value!;
-        const password = passwordRef.current?.value!;
-        const profile = photoFileRef.current?.files![0]!;
-        const userName = userNameRef.current?.value!;
-
-
-        const res = await registerWithEmailAndPassword(email, password);
+  
+        const res = await registerWithEmailAndPassword(state.input.email, state.input.password);
     
         if(typeof res !== "object"){
             alert(`Error: ${res}`);
@@ -122,30 +128,37 @@ export function Register() {
 
         //Create a unique image name
         const date = new Date().getTime();
-        const storageRef = ref(storage, `${userName + date}`);
+        const storageRef = ref(storage, `${state.input.userName + date}`);
 
-        await uploadBytesResumable(storageRef, profile).then(() => {
+        //profile is defined because its value is validated in validation()
+        await uploadBytesResumable(storageRef, state.input.profile!).then(() => {
             getDownloadURL(storageRef).then(async (downloadURL) => {
             try {
 
                 await updateProfile(res.user, {
-                    displayName : userName,
+                    displayName : state.input.userName,
                     photoURL: downloadURL,
                 });
                 l("Profile Updated!");
 
                 await addUser({
                     uid: res.user.uid,
-                    name: userName,
+                    name: state.input.userName,
                     photoURL: downloadURL,
-                    email
+                    email: state.input.email
                 });
                 l("User added!");
 
                 await createUserChat(res.user.uid);
                 l("Empty chat was created!");
                 
-                setModalView(prevState => !prevState);
+                setState(prevState => ({
+                    ...prevState,
+                    modal : {
+                        isOpen : false,
+                        children : null
+                    }
+                }));
                 navigation("/");
             } catch (err) {
                 console.log(err);
@@ -154,53 +167,146 @@ export function Register() {
         });
     }
 
-    function handleProfileImageChange(evt : React.ChangeEvent<HTMLInputElement>){
-       resetErrors(); // force the page to be updated after a user changed profile image to show a new one
+    function handleProfileImageClick(selectedFile : File | null){
+        const profile = state.input.profile ? state.input.profile : selectedFile;
+        if(!profile){
+            setState(prevState => ({
+                ...prevState,
+                errors : {
+                    ...prevState.errors,
+                    eProfileImg : possibleErrors["profImgError"]
+                }
+            }));
+            return;
+        }
+
+        const closeModalWindow = () => {
+            setState(prevState => ({
+                ...prevState,
+                input: {
+                    ...prevState.input,
+                    profile: null
+                },
+                modal: {
+                    isOpen: false,
+                    children: null
+                }
+            }));
+        }
+        const saveFile = () => {
+            setState(prevState => ({
+                ...prevState,
+                input : {
+                    ...prevState.input,
+                    profile
+                },
+                modal: {
+                    isOpen: false,
+                    children: null
+                }
+            }));
+        }
+        setState(prevState => ({
+            ...prevState,
+            modal: {
+                isOpen: true,
+                children: (
+                    <Modal isOpen={true}>
+                        <ViewImage 
+                            imageLink={URL.createObjectURL(profile)} 
+                            handleConfirmClick={() => saveFile()}
+                            handleRejectClick={() => closeModalWindow()}
+                            title={"your profile image"}
+                        />
+                    </Modal>
+                )
+            }
+        }));
+    }
+    
+    function generateChangeHandler(propName : string) : React.ChangeEventHandler<HTMLInputElement>{
+        return (evt: React.ChangeEvent<HTMLInputElement>) => {
+            setState(prevState => ({
+                ...prevState,
+                input : {
+                    ...prevState.input,
+                    [propName] : evt.target.value
+                }
+            }));
+        }
+    }
+    const InputComponent = ({inputLabel, inputID, errorMessage, propName, inputValue, inputType} : TInputComponent) => {
+        return(
+            <div className='input-field-box'>
+                <input type={inputType} id={inputID} className='input-field' value={inputValue} onChange={generateChangeHandler(propName)} required/>
+                <label htmlFor={inputID} className="auth-input-label">{inputLabel}</label>
+                <ErrorHandler message={errorMessage}/>
+            </div>
+        )
     }
 
     return (
         <form className="auth-box" onSubmit={onFormSubmit}>
             {
-                modalView &&
-                <Modal isOpen={modalView}>
-                    <LoadingSpinner />
-                </Modal>
+                state.modal.isOpen &&
+                state.modal.children
             }
             <h1 className="auth-box-title">GIV Chat</h1>
             <div className="auth-box-type">Register</div>
-            <div className='input-field-box'>
-                <input type="text" id="auth-name" className='input-field' ref={userNameRef} required/>
-                <label htmlFor="auth-name" className="auth-input-label">Name</label>
-                <ErrorHandler message={stateErrors.userNameError}/>
-            </div>
-            <div className='input-field-box'>
-                <input type="text" id="auth-emailRef" className='input-field' ref={emailRef} required/>
-                <label htmlFor="auth-emailRef" className="auth-input-label">Email</label>
-                <ErrorHandler message={stateErrors.emailError}/>
-            </div>
-            <div className='input-field-box'>
-                <input type="password" id="auth-password" className='input-field' ref={passwordRef}  required/>
-                <label htmlFor="auth-password" className="auth-input-label">Password</label>
-                <ErrorHandler message={stateErrors.passError}/>
-            </div>
-            <div className='input-field-box'>
-                <input type="password" id="auth-repeat-password" className='input-field' ref={confrimPasswordRef} required/>
-                <label htmlFor="auth-repeat-password" className="auth-input-label">Repeat Password</label>
-                <ErrorHandler message={stateErrors.confirmPassError}/>
-            </div>
+            {InputComponent({ 
+                inputID:"auth-name",
+                inputLabel:"Name", 
+                propName:"userName",
+                inputValue: state.input.userName,
+                inputType : "text",
+                errorMessage: state.errors.eUserName
+            })}
+            {InputComponent({ 
+                inputID:"auth-email",
+                inputLabel:"Email", 
+                propName:"email",
+                inputValue: state.input.email,
+                inputType : "text",
+                errorMessage: state.errors.eEmail
+            })}
+            {InputComponent({ 
+                inputID:"auth-password",
+                inputLabel:"Password", 
+                propName:"password",
+                inputValue: state.input.password,
+                inputType : "password",
+                errorMessage: state.errors.ePassword
+            })}
+            {InputComponent({ 
+                inputID:"auth-repeat-password",
+                inputLabel:"Repeat Password", 
+                propName:"confirmPass",
+                inputValue: state.input.confirmPass,
+                inputType : "password",
+                errorMessage: state.errors.eConfirmPassword
+            })}
             <label className="input-file-desctop">
                 {
-                    photoFileRef.current?.files![0] != undefined 
+                    state.input.profile
                     ?
-                    <img src={URL.createObjectURL(photoFileRef.current.files[0])} alt="profile-img" className="profile-img" />
+                    <div className="input-profile-box">
+                        <img 
+                            src={URL.createObjectURL(state.input.profile)} 
+                            alt="profile-img" 
+                            className="profile-img selected" 
+                            onClick={() => handleProfileImageClick(null)}/>
+                            
+                    </div>
                     :
-                    <ImFilePicture className="profile-img"/>
+                    <>
+                        <ImFilePicture className="profile-img"/>
+                        {"Choose your avatar"}
+                        <input type="file" className="input-file" onChange={(evt : React.ChangeEvent<HTMLInputElement>) => handleProfileImageClick(evt.target.files ? evt.target.files[0] : null)}/>
+                        <ErrorHandler message={state.errors.eProfileImg}/>
+                    </>
                 }
-                Choose your avatar
-                <input type="file" className="input-file" ref={photoFileRef} onChange={handleProfileImageChange}/>
-                <ErrorHandler message={stateErrors.profileImgErr}/>
             </label>
-            <input type="submit" value="Submit" className="auth-btn-submit"/>
+            <input type="submit" value="Submit" className="auth-btn-submit btn"/>
             <p className="auth-footer-notice">
                 You already have an account? <Link to={login} className="auth-nav-link">Login</Link>
             </p>
