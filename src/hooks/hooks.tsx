@@ -50,24 +50,24 @@ export function useMessages(){
 
     useEffect(() => {
 
-        const getMessages = () => {
-            onSnapshot(doc(db, "chats", currentChat.chatID!), (document) => {
-                const response = document.exists() && 
-                document.data()["messages"]
-                ?.map((message : IMessage) => ({ 
-                    senderID: message.senderID,
-                    text: message.text,
-                    documents : message.documents,
-                    images: message.images,
-                    id: message.id,
-                    date: message.date
-                } as IMessage));
+        const getMessages = onSnapshot(doc(db, "chats", currentChat.chatID!), (document) => {
+            const response = document.exists() && 
+            document.data()["messages"]
+            ?.map((message : IMessage) => ({ 
+                senderID: message.senderID,
+                text: message.text,
+                documents : message.documents,
+                images: message.images,
+                id: message.id,
+                date: message.date
+            } as IMessage));
 
-                setMessages(response);
-            });
-        } 
+            setMessages(response);
+        });
 
-        currentChat.chatID && getMessages();
+        return () => {
+            getMessages();
+        }
     }, [currentChat.chatID])
 
     return {setMessages, messages};
@@ -88,23 +88,16 @@ export function useFriendChatHeader(chatHeaderID : string) : IChatHeader | undef
     const [friendChatHeader, setFriendChatHeader] = useState<IChatHeader>();
 
     useEffect(() => {
-        const getFrinedChatHeader = () => {
-            onSnapshot(doc(db, "userChats", chatHeaderID), (document) => {
-                const response = document.exists() && 
-                document.data()[currentChat.chatID];
+        const getFrinedChatHeader = onSnapshot(doc(db, "userChats", chatHeaderID), (document) => {
+            const response = document.exists() && 
+            document.data()[currentChat.chatID];
 
-                setFriendChatHeader(response);
-            });
+            setFriendChatHeader(response);
+        });
+
+        return () => {
+            getFrinedChatHeader();
         }
-        // async function getFrinedChatHeader(){
-        //     const response = await getChatHeader(currentChat.user.uid);
-        //     if(typeof response != "object"){
-        //      alert("It is failed to identify chat header for selected user.");
-        //      return;
-        //     }
-        //     setFriendChatHeader(response[currentChat.chatID]);
-        // }
-        currentChat.user.uid && getFrinedChatHeader();
     }, [currentChat.user.uid])
 
     return friendChatHeader;
