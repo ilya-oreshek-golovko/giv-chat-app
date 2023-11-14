@@ -89,14 +89,22 @@ export function useFriendChatHeader() : IChatHeader | undefined{
     const [friendChatHeader, setFriendChatHeader] = useState<IChatHeader>();
 
     useEffect(() => {
-        async function getFrinedChatHeader(){
-            const response = await getChatHeader(currentChat.user.uid);
-            if(typeof response != "object"){
-             alert("It is failed to identify chat header for selected user.");
-             return;
-            }
-            setFriendChatHeader(response[currentChat.chatID]);
+        const getFrinedChatHeader = () => {
+            onSnapshot(doc(db, "userChats", currentChat.user.uid), (document) => {
+                const response = document.exists() && 
+                document.data()[currentChat.chatID];
+
+                setFriendChatHeader(response);
+            });
         }
+        // async function getFrinedChatHeader(){
+        //     const response = await getChatHeader(currentChat.user.uid);
+        //     if(typeof response != "object"){
+        //      alert("It is failed to identify chat header for selected user.");
+        //      return;
+        //     }
+        //     setFriendChatHeader(response[currentChat.chatID]);
+        // }
         currentChat.user.uid && getFrinedChatHeader();
     }, [currentChat.user.uid])
 
