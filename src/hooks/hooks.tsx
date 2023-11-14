@@ -5,7 +5,6 @@ import { doc, onSnapshot } from "firebase/firestore";
 import { db } from "../firebase/firebase";
 import { ChatContext, ChatType } from "../context/ChatContext";
 import { InputState, TRegisterState } from "../types";
-import { getChatHeader } from "../firebase/chat";
 
 export function useChats() : Array<IChatHeader>{
     const l = (mes : any, title : string = "DEBUG useChats hook: ") => console.log(title, mes); 
@@ -45,7 +44,7 @@ export function useChats() : Array<IChatHeader>{
     return chats;
 }
 
-export function useMessages() : IMessage[] | undefined{
+export function useMessages(){
     const {currentChat} = useContext(ChatContext);
     const [messages, setMessages] = useState<IMessage[]>();
 
@@ -71,10 +70,10 @@ export function useMessages() : IMessage[] | undefined{
         currentChat.chatID && getMessages();
     }, [currentChat.chatID])
 
-    return messages;
+    return {setMessages, messages};
 }
 
-export function useFriendChatHeader() : IChatHeader | undefined{
+export function useFriendChatHeader(chatHeaderID : string) : IChatHeader | undefined{
     const {currentChat} = useContext(ChatContext);
     // const defaultChatHeader : IChatHeader = {
     //     uid: "",
@@ -90,7 +89,7 @@ export function useFriendChatHeader() : IChatHeader | undefined{
 
     useEffect(() => {
         const getFrinedChatHeader = () => {
-            onSnapshot(doc(db, "userChats", currentChat.user.uid), (document) => {
+            onSnapshot(doc(db, "userChats", chatHeaderID), (document) => {
                 const response = document.exists() && 
                 document.data()[currentChat.chatID];
 

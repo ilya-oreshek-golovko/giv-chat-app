@@ -2,6 +2,9 @@
   font-size: 16px;
   box-sizing: border-box;
 }
+.testCont{
+  overflow: auto;
+}
 body {
   --gradient-first: #c9e2fa;
   --gradient-second: #b3d6f6;

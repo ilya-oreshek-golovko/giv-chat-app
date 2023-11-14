@@ -35,7 +35,8 @@ interface IMessage{
     senderID: string,
     text: string,
     documents: Array<string>
-    images: Array<string>
+    images: Array<string>,
+    isReaded?: boolean
 }
 interface IUnreadedMessages{
     [messageID : string] : Array<string>

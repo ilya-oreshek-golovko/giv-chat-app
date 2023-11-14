@@ -15,10 +15,10 @@ type TViewImage = {
   imageLink: string
 }
 
-const Message = React.forwardRef(({message, isReaded} : {message : IMessage, isReaded : boolean}, chatMainRef : any) => {
+export default function Message({message, isReaded, handleMarkMessageAsReaded} : {message : IMessage, isReaded : boolean, handleMarkMessageAsReaded : Function}){
 
   const currentUser = useContext(AuthContext);
-  const chatData    = useContext(ChatContext);
+  const {currentChat}    = useContext(ChatContext);
   const {setSelectedFiles} = useContext(SelectedFilesContext);
   const [viewImageState, setViewImageState] = useState<TViewImage>({
     isViewImage : false,
@@ -28,47 +28,14 @@ const Message = React.forwardRef(({message, isReaded} : {message : IMessage, isR
   const imagesToView = 6;
   const docsToView = 6;
 
-  const messageRef = useRef() as React.RefObject<HTMLInputElement>;
+  const messageRef = useRef() as React.RefObject<HTMLDivElement>;
 
   useEffect(() => {
-    messageRef.current?.scrollIntoView({ behavior: "smooth" });
+    messageRef.current?.scrollIntoView();
+    if(isReaded || message.senderID == currentUser.uid) return;
+
+    handleMarkMessageAsReaded(message.id);
   }, [message]);
-
-  // function isVisible(evt : any) {
-  //   const {target} = evt;
-  //   // Все позиции элемента
-  //   const targetPosition = {
-  //     top: window.scrollY + target.getBoundingClientRect().top,
-  //     left: window.scrollX + target.getBoundingClientRect().left,
-  //     right: window.scrollX + target.getBoundingClientRect().right,
-  //     bottom: window.scrollY + target.getBoundingClientRect().bottom
-  //   };
-  //   // Получаем позиции окна
-  //   const ChatMainPosition = {
-  //     top: window.scrollY + chatMainRef.current.getBoundingClientRect().top,
-  //     left: window.scrollX + chatMainRef.current.getBoundingClientRect().left,
-  //     right: window.scrollX + chatMainRef.current.getBoundingClientRect().right,
-  //     bottom: window.scrollY + chatMainRef.current.getBoundingClientRect().bottom
-  //     // top: window.scrollY,
-  //     // left: window.scrollX,
-  //     // right: window.scrollX + document.documentElement.clientWidth,
-  //     // bottom: window.scrollY + document.documentElement.clientHeight
-  //   };
-
-  //   console.log(targetPosition);
-  //   console.log(ChatMainPosition);
-  
-  //   if (targetPosition.bottom > ChatMainPosition.top && // Если позиция нижней части элемента больше позиции верхней чайти окна, то элемент виден сверху
-  //     targetPosition.top < ChatMainPosition.bottom && // Если позиция верхней части элемента меньше позиции нижней чайти окна, то элемент виден снизу
-  //     targetPosition.right > ChatMainPosition.left && // Если позиция правой стороны элемента больше позиции левой части окна, то элемент виден слева
-  //     targetPosition.left < ChatMainPosition.right) { // Если позиция левой стороны элемента меньше позиции правой чайти окна, то элемент виден справа
-  //     // Если элемент полностью видно, то запускаем следующий код
-  //     console.log('Вы видите элемент :)');
-  //   } else {
-  //     // Если элемент не видно, то запускаем этот код
-  //     console.clear();
-  //   };
-  // };
 
   function getMessageDate(){
     const mDate = message.date.toDate();
@@ -99,7 +66,7 @@ const Message = React.forwardRef(({message, isReaded} : {message : IMessage, isR
     }
     // const imagesForOutput = message.images.splice(0, imagesToView);
     return(
-      <div className="message-content-files-container" ref={messageRef}>
+      <div className="message-content-files-container">
         <div className={"message-content-files " + (currentUser.uid == message.senderID ? "owner-content" : "friend-content")}>
           {
             imagesForOutput.map((imageLink : string) => (
@@ -163,10 +130,10 @@ const Message = React.forwardRef(({message, isReaded} : {message : IMessage, isR
 
 //https://ru.w3docs.com/snippets/css/kak-mozhno-otobrazit-animirovannyi-tekst-na-izobrazhenii-pri-navedenii-myshi-s-pomoshchiu-css3.html
   return (
-    <div key={message.id} className="chat-message ">
+    <div key={message.id} className="chat-message" ref={messageRef}>
         <div className={"message-container " + (currentUser.uid == message.senderID ? "owner-message" : "friend-message")}>
           <div className="message-info">
-            <img src={currentUser.uid == message.senderID ? currentUser.photoURL : chatData?.currentChat?.user.photoURL} alt="profile-img" className="message-profile-img" />
+            <img src={currentUser.uid == message.senderID ? currentUser.photoURL : currentChat.user.photoURL} alt="profile-img" className="message-profile-img" />
             <div className="message-date-time">{getMessageDate()}</div>
           </div>
           <div className="message-content">
@@ -199,6 +166,4 @@ const Message = React.forwardRef(({message, isReaded} : {message : IMessage, isR
         }
     </div>
   )
-});
-
-export default Message;
+}
