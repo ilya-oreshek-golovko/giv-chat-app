@@ -7,7 +7,7 @@ import { ImFilePicture } from "react-icons/im"
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import {updateProfile} from 'firebase/auth';
 import { storage } from "../firebase/firebase";
-import { createUserChat } from "../firebase/chat";
+import { createChatHeader } from "../firebase/chat";
 import Modal from "../components/Modal";
 import LoadingSpinner from "../components/LoadingSpinner";
 import ViewImage from "../components/ViewImage";
@@ -102,69 +102,68 @@ export function Register() {
     async function onFormSubmit(evt : SyntheticEvent<HTMLFormElement, SubmitEvent>){
         evt.preventDefault();
 
+        try{
+            if(!validation()){
+                throw Error("Some of the values are undefined");
+            }
+
+            setState(prevState => ({
+                ...prevState,
+                modal : {
+                    isOpen : true,
+                    children : (
+                        <Modal isOpen={true}>
+                            <LoadingSpinner />
+                        </Modal>
+                        )
+                }
+            }));
+      
+            const res = await registerWithEmailAndPassword(state.input.email, state.input.password);
+        
+            if(typeof res !== "object"){
+                throw Error(`Error during registration. Details: ${res}`);
+            }
+    
+            //Create a unique image name
+            const date = new Date().getTime();
+            const storageRef = ref(storage, `${state.input.userName + date}`);
+    
+            //profile is defined because its value is validated in validation()
+            await uploadBytesResumable(storageRef, state.input.profile!).then(() => {
+                getDownloadURL(storageRef).then(async (downloadURL) => {
+                    await updateProfile(res.user, {
+                        displayName : state.input.userName,
+                        photoURL: downloadURL,
+                    });
+                    l("Profile Updated!");
+    
+                    await addUser({
+                        uid: res.user.uid,
+                        name: state.input.userName,
+                        photoURL: downloadURL,
+                        email: state.input.email
+                    });
+                    l("User added!");
+    
+                    await createChatHeader(res.user.uid, {});
+                    l("Empty chat was created!");
+                    
+                    navigation("/");
+    
+                });
+            });
+        }catch(e : any){
+            l(e.message);
+        }
+
         setState(prevState => ({
             ...prevState,
             modal : {
-                isOpen : true,
-                children : (
-                    <Modal isOpen={true}>
-                        <LoadingSpinner />
-                    </Modal>
-                    )
+                isOpen : false,
+                children : null
             }
         }));
-
-        if(!validation()){
-            l("Some of the values are undefined");
-            return null;
-        }
-  
-        const res = await registerWithEmailAndPassword(state.input.email, state.input.password);
-    
-        if(typeof res !== "object"){
-            alert(`Error: ${res}`);
-            return;
-        }
-
-        //Create a unique image name
-        const date = new Date().getTime();
-        const storageRef = ref(storage, `${state.input.userName + date}`);
-
-        //profile is defined because its value is validated in validation()
-        await uploadBytesResumable(storageRef, state.input.profile!).then(() => {
-            getDownloadURL(storageRef).then(async (downloadURL) => {
-            try {
-
-                await updateProfile(res.user, {
-                    displayName : state.input.userName,
-                    photoURL: downloadURL,
-                });
-                l("Profile Updated!");
-
-                await addUser({
-                    uid: res.user.uid,
-                    name: state.input.userName,
-                    photoURL: downloadURL,
-                    email: state.input.email
-                });
-                l("User added!");
-
-                await createUserChat(res.user.uid);
-                l("Empty chat was created!");
-                
-                setState(prevState => ({
-                    ...prevState,
-                    modal : {
-                        isOpen : false,
-                        children : null
-                    }
-                }));
-                navigation("/");
-            } catch (err) {
-                console.log(err);
-            }
-            });
-        });
     }
 
     function handleProfileImageClick(selectedFile : File | null){
@@ -217,6 +216,7 @@ export function Register() {
                             handleConfirmClick={() => saveFile()}
                             handleRejectClick={() => closeModalWindow()}
                             title={"your profile image"}
+                            roundedImage={true}
                         />
                     </Modal>
                 )

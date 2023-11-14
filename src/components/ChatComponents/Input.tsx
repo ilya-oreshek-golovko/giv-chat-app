@@ -1,17 +1,17 @@
 import { ChangeEvent, useContext, useRef } from 'react';
 import { BsPaperclip } from 'react-icons/bs';
 import { MdOutlineAddPhotoAlternate } from 'react-icons/md';
-import { IMessage, IUser } from '../../interfaces';
-import { addMessage, updateChatHeader } from '../../firebase/chat';
+import { IMessage, IUnreadedMessages, IUser, IUserChats } from '../../interfaces';
+import { addMessageToChat, updateChatHeader } from '../../firebase/chat';
 import { AuthContext } from '../../context/AuthContext';
 import { getDownloadURL, list, ref, uploadBytesResumable } from 'firebase/storage';
 import { storage } from '../../firebase/firebase';
 import { ChatContext } from '../../context/ChatContext';
 import { v4 as uuid } from "uuid"; 
-import { Timestamp } from 'firebase/firestore';
+import { Timestamp, arrayUnion } from 'firebase/firestore';
 import WaitingSpinner from '../WaitingSpinner';
 import { SelectedFilesContext } from '../../context/SelectedFilesContext';
-import { InputState, TDocument, TImage } from '../../types';
+import { TDocument, TImage } from '../../types';
 import { useStoredChatFiles } from '../../hooks/hooks';
 
 const l = (mes : any) => console.log("Input: ", mes);
@@ -22,9 +22,9 @@ export default function Input() {
   const imagesInputRef = useRef() as React.RefObject<HTMLInputElement>;
   const documentsInputRef = useRef() as React.RefObject<HTMLInputElement>;
 
-  const {setStateF} = useContext(SelectedFilesContext);
+  const {setSelectedFiles} = useContext(SelectedFilesContext);
 
-  const {state, setState} = useStoredChatFiles(chatData, saveFilesLocaly);
+  const {state, setState} = useStoredChatFiles(chatData);
   
   function toggleWaitingSpinner(){
     setState(prevState => ({
@@ -47,20 +47,22 @@ export default function Input() {
   
   function inputValidation(){
     if(!chatData?.currentChat?.chatID){
-      l("*Cannot identify the related chat. Please select a friend");
+      alert("*Cannot identify the related chat. Please select a friend");
       //setInputError("*Please type a message or select a file/image");
       return false;
     }else if(!state.text && state.images.length == 0 && state.documents.length == 0){
-      l("*Please type a message or select a file/image");
+      alert("*Please type a message or select a file/image");
       //setInputError("*Cannot identify the related chat. Please contact sysadmin");
       return false;
+    }else if(!chatData?.currentChat?.user.uid){
+      alert("*Cannot identify user ID. Please contact system administrator");
     }
 
     //setInputError("");
     return true;
   }
   
-  async function saveMessage(imagesStorageLinks : Array<string>, documentsStorageLinks : Array<string>){
+  async function saveMessage(imagesStorageLinks : Array<string>, documentsStorageLinks : Array<string>) : Promise<string>{
     
     const message : IMessage = {
       senderID: currentUser.uid,
@@ -71,8 +73,14 @@ export default function Input() {
       date: Timestamp.now()
     };
 
-    await addMessage(message, chatData?.currentChat?.chatID!); // chatID will be checked in validation function
+    // const newUnreaded : IUnreadedMessages = {
+    //   [message.id] : [chatData?.currentChat?.user.uid!]
+    // };
+
+    await addMessageToChat(message, chatData?.currentChat?.chatID!); 
     l("Message saved");
+
+    return message.id;
   }
 
   function getLastMessage(){
@@ -81,14 +89,25 @@ export default function Input() {
     return "attached"
   }
 
-  async function updateLastMessageForUsers() {
-    await updateChatHeader(currentUser.uid, {
-      [chatData?.currentChat?.chatID + ".lastMessage"] : getLastMessage()
-    });
+  async function updateLastMessageAndUnreaded(savedMessageID : string) {
+    if(!chatData.currentChat.chatID || !chatData.currentChat.user.uid){
+      alert("Is is failed to update last message. Please contact system administrator");
+      return;
+    }
 
-    await updateChatHeader(chatData?.currentChat?.user.uid!, {
-      [chatData?.currentChat?.chatID + ".lastMessage"] : getLastMessage()
-    });
+    const lastMessage = getLastMessage();
+
+    const chatHeaderFriend = {
+      [chatData.currentChat.chatID + ".lastMessage"] : lastMessage,
+      [chatData.currentChat.chatID + ".unreadedMessages"] : arrayUnion(savedMessageID)
+    };
+    const chatHeaderCurrentUser = {
+      [chatData.currentChat.chatID + ".lastMessage"] : lastMessage
+    };
+
+    await updateChatHeader(currentUser.uid, chatHeaderCurrentUser);
+
+    await updateChatHeader(chatData.currentChat.user.uid, chatHeaderFriend);
   }
 
   function getFileName(prefix : string){
@@ -145,11 +164,12 @@ export default function Input() {
       const imagesStorageLinks : string[] = await getUploadImagesLinks();
       const documentsStorageLinks : string[] = await getUploadDocumentsLinks();
 
-      l(`imagesStorageLinks : ${imagesStorageLinks.length}`);
-      l(`documentsStorageLinks : ${documentsStorageLinks.length}`);
+      // l(`imagesStorageLinks : ${imagesStorageLinks.length}`);
+      // l(`documentsStorageLinks : ${documentsStorageLinks.length}`);
 
-      saveMessage(imagesStorageLinks, documentsStorageLinks);
-      updateLastMessageForUsers();
+      saveMessage(imagesStorageLinks, documentsStorageLinks).then(savedMessageID => {
+        updateLastMessageAndUnreaded(savedMessageID);
+      });
     }catch(e : any){
       l(e.message);
     }
@@ -200,46 +220,50 @@ export default function Input() {
     setState(newState);
   }
 
-  function saveFilesLocaly(newState : InputState){
-    if(!chatData?.currentChat?.chatID) return;
-    console.log(JSON.stringify(newState));
-    localStorage.setItem(chatData?.currentChat?.chatID, JSON.stringify(newState))
-  }
-
   function handleModalView({images = [], documents = []} : {images? : Array<TImage>, documents? : Array<TDocument>}){
-    setStateF({
+    const clearSelectedFiles = (listType : string) => {
+      switch(listType){
+        case "images":
+          setState(prevState => ({
+            ...prevState,
+            images: []
+          }));
+          imagesInputRef.current!.value = '';
+          break;
+        case "documents":
+          setState(prevState => ({
+            ...prevState,
+            documents: []
+          }));
+          documentsInputRef.current!.value = '';
+          break;
+        default:
+          l("Error: unable to define list type to delete selected files");
+      }
+  
+      setSelectedFiles(prevState => ({
+        ...prevState,
+        isOpen: false
+      }));
+    }
+
+    const deleteSelectedFiles = (deletedImage : TImage) => {
+      const newImages = state.images.filter(image => image.imgLink !== deletedImage.imgLink);
+      setState(prevState => ({
+        ...prevState,
+        images: newImages
+      }));
+    }
+
+    setSelectedFiles({
       images,
       documents,
       isOpen: true,
-      clearSelectedFiles: clearSelectedFiles
+      clearSelectedFiles,
+      deleteSelectedFiles
     });
   }
 
-  function clearSelectedFiles(listType : string){
-    switch(listType){
-      case "images":
-        setState(prevState => ({
-          ...prevState,
-          images: []
-        }));
-        imagesInputRef.current!.value = '';
-        break;
-      case "documents":
-        setState(prevState => ({
-          ...prevState,
-          documents: []
-        }));
-        documentsInputRef.current!.value = '';
-        break;
-      default:
-        l("Error: unable to define list type to delete selected files");
-    }
-
-    setStateF(prevState => ({
-      ...prevState,
-      isOpen: false
-    }));
-  }
 
   function handleUserInput(evt : React.KeyboardEvent<HTMLInputElement>){
     evt.code == "Enter" && handleSendClick();

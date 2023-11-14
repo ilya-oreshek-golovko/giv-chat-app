@@ -1,4 +1,4 @@
-import { Dispatch, MouseEventHandler, SetStateAction, createContext, useState } from "react"
+import { Dispatch, SetStateAction, createContext, useState } from "react"
 import { TDocument, TImage } from "../types"
 
 export type TSelectedFilesState = {
@@ -6,28 +6,30 @@ export type TSelectedFilesState = {
     documents: Array<TDocument>,
     isOpen: boolean,
     clearSelectedFiles?: Function,
+    deleteSelectedFiles?: Function
 }
 export type TSelectedFiles = {
-    stateF: TSelectedFilesState,
-    setStateF : Dispatch<SetStateAction<TSelectedFilesState>>,
+    selectedFilesState: TSelectedFilesState,
+    setSelectedFiles : Dispatch<SetStateAction<TSelectedFilesState>>,
 }
 
 const defaultValue = {
-    stateF: {
+    selectedFilesState: {
         images: [],
         documents: [],
         isOpen: false
     },
-    setStateF: () => {},
+    setSelectedFiles: () => {},
 }
 
 export const SelectedFilesContext = createContext<TSelectedFiles>(defaultValue);
 
 export function SelectedFilesProvider({children} : {children : any}){
-    const [stateF, setStateF] = useState<TSelectedFilesState>(defaultValue.stateF);
+    const [selectedFilesState, setSelectedFiles] = useState<TSelectedFilesState>(defaultValue.selectedFilesState);
+    const value = {selectedFilesState, setSelectedFiles};
 
     return(
-        <SelectedFilesContext.Provider value={{stateF, setStateF}}>
+        <SelectedFilesContext.Provider value={value}>
             {children}
         </SelectedFilesContext.Provider>
     )

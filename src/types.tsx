@@ -1,10 +1,8 @@
 import {MouseEventHandler} from 'react';
+import { IChatHeader } from './interfaces';
 
 type FriendProps = {
-    key: string,
-    friendName : string,
-    lastMessage: string,
-    src: string,
+    chatHeader: IChatHeader,
     handleObjClick: MouseEventHandler<HTMLDivElement>
 }
 type RegisterError = {

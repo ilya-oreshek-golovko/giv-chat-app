@@ -3,22 +3,33 @@ import { IChat } from "../interfaces";
 import { AuthContext } from "./AuthContext";
 
 export type ChatType = {
-    currentChat : IChat | undefined,
-    setCurrentChat : Dispatch<SetStateAction<IChat | undefined>>
+    currentChat : IChat,
+    setCurrentChat : Dispatch<SetStateAction<IChat>>
 }
-
-export const ChatContext = createContext<ChatType | undefined>(undefined);
+const defaultContextValue = {
+    currentChat: {
+        chatID: "",
+        unreadedMessages: [],
+        user: {
+            name: "",
+            photoURL: "",
+            uid: ""
+        }
+    },
+    setCurrentChat: () => {}
+}
+export const ChatContext = createContext<ChatType>(defaultContextValue);
 
 export function ChatContextProvider({children} : {children : any}){
 
     const currentUser = useContext(AuthContext);
-    const [currentChat, setCurrentChat] = useState<IChat>();
+    const [currentChat, setCurrentChat] = useState<IChat>(defaultContextValue.currentChat);
 
     useEffect(() => {
 
         const resetCurrentChat = () => {
             console.log("ChatProvider Reset");
-            setCurrentChat(undefined)
+            setCurrentChat(defaultContextValue.currentChat)
         }
 
         return () =>{

@@ -3,21 +3,22 @@ import ChatHeader from './ChatHeader';
 import Input from './Input';
 import Messages from './Messages';
 import { ChatContext } from '../../context/ChatContext';
+import { IChatHeader } from '../../interfaces';
 
 export default function Chat() {
 
-  const chatObj = useContext(ChatContext);
+  const {currentChat} = useContext(ChatContext);
 
   return (
     <div className='home-chat'>
       <ChatHeader currentInterlocutorName={
-        chatObj?.currentChat?.user.name != undefined 
-        ? chatObj.currentChat.user.name 
+        currentChat.user.name != undefined 
+        ? currentChat.user.name 
         : ""
       }/>
-      <Messages />
+      <Messages/>
       {
-        chatObj?.currentChat?.chatID && <Input />
+        currentChat.chatID && <Input />
       }
     </div>
   )

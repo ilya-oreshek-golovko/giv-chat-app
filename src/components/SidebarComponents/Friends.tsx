@@ -3,29 +3,35 @@ import { getCombinedChatID, useChats } from "../../hooks/hooks";
 import { IChatHeader } from "../../interfaces";
 import { ChatContext } from "../../context/ChatContext";
 import Friend from "./Friend";
+import { clearUnreadedMessages } from "../../firebase/chat";
+import { AuthContext } from "../../context/AuthContext";
 
-export default function Friends() {
+export default function Friends({receivedChats} : {receivedChats : IChatHeader[]}) {
 
-    const chats : IChatHeader[] = useChats();
-    const chat = useContext(ChatContext);
+    const {currentChat, setCurrentChat} = useContext(ChatContext);
+    const currentUser = useContext(AuthContext);
 
     return (
         <div className='sidebar-friends'>
             {
-                chats.length > 0 &&
-                chats.map(({uid, userInfo, date, lastMessage}) => (
-                    <Friend key={userInfo.uid} 
-                        friendName={userInfo.name} 
-                        lastMessage={lastMessage} 
-                        src={userInfo.photoURL} 
+                receivedChats.length > 0 &&
+                receivedChats.map((chatHeader : IChatHeader) => (
+                    <Friend 
+                        chatHeader={chatHeader}
                         handleObjClick={
                             (evt : React.MouseEvent<HTMLDivElement>) => {
                                 evt.preventDefault();
-                                if(chat?.currentChat?.chatID == uid) return;
+                                if(currentChat.chatID == chatHeader.uid) return;
 
-                                chat?.setCurrentChat({
-                                    chatID: uid,
-                                    user: userInfo
+                                if(chatHeader.unreadedMessages && chatHeader.unreadedMessages.length > 0){
+                                    clearUnreadedMessages(currentUser.uid, chatHeader.uid);
+                                }
+
+                                setCurrentChat({
+                                    chatID: chatHeader.uid,
+                                    user: chatHeader.userInfo,
+                                    //unreadedMessages: []
+                                    unreadedMessages: chatHeader.unreadedMessages || []
                                 });
                             }
                         }

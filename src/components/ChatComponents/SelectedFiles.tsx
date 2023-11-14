@@ -7,40 +7,59 @@ import ViewImage from '../ViewImage';
 
 type ModalState = {
     isModalOpen : boolean,
-    componentToRender : any
+    componentToRender : JSX.Element | null
 }
 export default function SelectedFiles() {
-    const {stateF, setStateF} = useContext(SelectedFilesContext);
-    const {images, documents, isOpen, clearSelectedFiles} = stateF;
+
+    const {selectedFilesState, setSelectedFiles} = useContext(SelectedFilesContext);
+    const {images, documents, isOpen, clearSelectedFiles, deleteSelectedFiles} = selectedFilesState;
 
     const [modalState, setModalState] = useState<ModalState>({
         isModalOpen: false,
-        componentToRender: ""
+        componentToRender: null
     });
     const listType = images.length > 0 ? "images" : "documents";
 
     function closeSelectedFiles(){
-        setStateF((prevState : TSelectedFilesState) => ({
+        setSelectedFiles(prevState => ({
             ...prevState,
             isOpen: false
         }));
+    }
+
+    function closeModal(){
+        setModalState({componentToRender: null, isModalOpen : false});
     }
 
     function handleDeleteAction(evt : React.MouseEvent<HTMLButtonElement>) {
         evt.preventDefault();
         if(clearSelectedFiles) clearSelectedFiles(listType);
         closeSelectedFiles();
-        setModalState(prevState => ({...prevState, isModalOpen : false}));
+        closeModal();
+        //setModalState(prevState => ({...prevState, isModalOpen : false}));
     }
 
-    function handleImageClick(imageLink : string, imageName : string | undefined){
+    function handleImageClick(image : TImage){
+        const imageName = image.imgFile?.name || "file";
         setModalState({
             componentToRender: (
                 <ViewImage 
-                    imageLink={imageLink} 
-                    handleConfirmClick={() => setModalState(prevState => ({...prevState, isModalOpen: false}))}
-                    handleRejectClick={() => {}}
-                    title={imageName ? imageName : "file"}
+                    imageLink={image.imgLink} 
+                    handleConfirmClick={() => closeModal()}
+                    handleRejectClick={() => { 
+                        if(deleteSelectedFiles){
+                            deleteSelectedFiles(image);
+                            const newImages = images.filter(iterableImage => iterableImage.imgLink !== image.imgLink)
+                            setSelectedFiles(prevState => ({
+                                ...prevState,
+                                images: newImages
+                            }));
+                            closeModal();
+                        }
+                        else console.log("Can not delete selected file");
+                    }}
+                    title={imageName}
+                    labelReject='Delete'
                 />
             ), 
             isModalOpen : true
@@ -63,9 +82,11 @@ export default function SelectedFiles() {
                 images.map((image : TImage) => 
                     <div className="selected-files-item" key={image.imgLink}>
                         <div className='selected-files-image-box'>
-                            <div className="selected-files-item-view-option">V</div>
-                            <div className="selected-files-item-delete-option">D</div>
-                            <img src={image.imgLink} alt="img-preview" className="selected-files-type image" onClick={() => handleImageClick(image.imgLink, image.imgFile?.name)}/>
+                            {/* <div className="selected-files-options">
+                                <div className="selected-files-option view">V</div>
+                                <div className="selected-files-option delete">D</div>
+                            </div> */}
+                            <img src={image.imgLink} alt="img-preview" className="selected-files-type image" onClick={() => handleImageClick(image)}/>
                         </div>
                         {
                             image.imgFile &&
@@ -88,10 +109,10 @@ export default function SelectedFiles() {
             }
         </div>
         <div className="selected-files-btn-box">
-            <button className="selected-files-btn confirmation" onClick={(evt) => closeSelectedFiles()}>Ok</button>
+            <button className="selected-files-btn confirmation btn" onClick={(evt) => closeSelectedFiles()}>Ok</button>
             {
                 clearSelectedFiles &&
-                <button className="selected-files-btn delete" onClick={() => handleDeleteClick()}>Delete</button>
+                <button className="selected-files-btn delete btn" onClick={() => handleDeleteClick()}>Delete</button>
             }
         </div>  
         {

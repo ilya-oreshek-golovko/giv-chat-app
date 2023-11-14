@@ -3,7 +3,7 @@ import { useRef, KeyboardEvent, RefObject, useState, useContext, MouseEvent } fr
 import { db } from '../../firebase/firebase';
 import { ErrorHandler } from '../../pages/Register';
 import Friend from './Friend';
-import { IUser, IUserInfoHeader } from '../../interfaces';
+import { IChatHeader, IChats, IUser, IUserChats, IUserInfoHeader } from '../../interfaces';
 import { AuthContext } from '../../context/AuthContext';
 import { ChatContext } from '../../context/ChatContext';
 import { createChat, getChat, updateChatHeader } from '../../firebase/chat';
@@ -15,7 +15,7 @@ type TSearch = {
 }
 const l = (mes : any) => console.log(mes);
 
-export default function Search() {
+export default function Search({receivedChats} : {receivedChats : IChatHeader[]}) {
   console.log("SEARCH");
   const userToFind = useRef() as RefObject<HTMLInputElement>;
 
@@ -24,10 +24,11 @@ export default function Search() {
     users : []
   });
 
-  const currentUser = useContext(AuthContext);
-  const cChat = useContext(ChatContext);
+  const currentUser : IUser  = useContext(AuthContext);
+  const {currentChat, setCurrentChat} = useContext(ChatContext);
 
   function clearState(){
+    console.log("YYYYYYYYYYYYYYYYYY");
     setState({
       error : "",
       users : []
@@ -39,7 +40,7 @@ export default function Search() {
     try{
       const userName = userToFind.current?.value;
 
-      if(userName == currentUser.displayName){
+      if(userName == currentUser.name){
         setState({
           error: "It is your name!",
           users : []
@@ -77,13 +78,23 @@ export default function Search() {
 
   async function handleSelect(user : IUser) {
     try{
-      const isSelectedFriendAlreadyinChat = () : boolean =>{
+
+      const isSelectedFriendAlreadyinChat = (chatObj : any) : boolean =>{
         if(!chatObj.exists()) return false;
     
-        if(cChat?.currentChat?.chatID !== chatID){
-          cChat?.setCurrentChat({
+        if(currentChat.chatID !== chatID){
+          const unreadedMessages = receivedChats.find(chatHeader => chatHeader.uid == chatID)?.unreadedMessages;
+          if(!unreadedMessages) alert("There is an error with unreaded messages. Please contact system administrator");
+
+          setCurrentChat({
               chatID: chatID,
-              user: friendInfo
+              user: {
+                name: user.name,
+                photoURL: user.photoURL,
+                uid: user.uid
+              },
+              unreadedMessages: []
+              //unreadedMessages: unreadedMessages || []
           });
         }
         clearState();
@@ -93,40 +104,45 @@ export default function Search() {
 
       const chatID = getCombinedChatID(currentUser.uid, user.uid);
       const chatObj = await getChat(chatID);
+      
+      if(isSelectedFriendAlreadyinChat(chatObj)) return;
+
+      const chat : IChats = {
+        messages : []
+        //unreaded : []
+      };
+      await createChat(chatID, chat);
+      l("Chat was created!");
 
       const friendInfo : IUserInfoHeader = {
         name: user.name,
         photoURL: user.photoURL,
         uid: user.uid
       };
-      if(isSelectedFriendAlreadyinChat()) return;
+      const currentUserInfo : IUserInfoHeader = {
+        name: currentUser.name,
+        photoURL: currentUser.photoURL,
+        uid: currentUser.uid
+      }
 
-      await createChat(chatID);
-      l("Chat was created!");
+      const currentUserChats = {
+        [`${chatID}.userInfo`] : friendInfo,
+        [`${chatID}.date`] : serverTimestamp()
+      } 
+      const friendChats = {
+        [`${chatID}.userInfo`] : currentUserInfo,
+        [`${chatID}.date`] : serverTimestamp()
+      }
 
-      await updateChatHeader(currentUser.uid, {
-        [chatID + ".userInfo"] : friendInfo as IUserInfoHeader,
-        [chatID + ".date"] : serverTimestamp()
-      });
+      await updateChatHeader(currentUser.uid, currentUserChats);
       l("Chat Header(currentUser) was created!");
-
-      await updateChatHeader(user.uid, {
-        [chatID + ".userInfo"] : {
-          name: currentUser.displayName,
-          photoURL: currentUser.photoURL,
-          uid: currentUser.uid
-        } as IUserInfoHeader,
-        [chatID + ".date"] : serverTimestamp()
-      });
+      await updateChatHeader(user.uid, friendChats);
       l("Chat Header(user) was created!");
 
-      cChat?.setCurrentChat({
+       setCurrentChat({
           chatID: chatID,
-          user: {
-            name: user.name,
-            photoURL: user.photoURL,
-            uid: user.uid
-          } as IUserInfoHeader
+          user: friendInfo,
+          unreadedMessages: []
       });
       
       clearState();
@@ -147,7 +163,13 @@ export default function Search() {
       }
       {state.users.length > 0 && 
         state.users.map(user => (
-          <Friend key={user.uid} friendName={user.name} lastMessage="" src={user.photoURL} 
+          <Friend 
+          chatHeader={{
+            uid : user.uid,
+            userInfo: {name: user.name,photoURL: user.photoURL, uid: user.uid},
+            lastMessage: "",
+            date: new Date() // TODO
+          }} 
           handleObjClick={
             (evt : MouseEvent<HTMLDivElement>) => {
               evt.preventDefault();

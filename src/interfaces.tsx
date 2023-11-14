@@ -1,4 +1,4 @@
-import { Timestamp } from "firebase/firestore";
+import { FieldValue, Timestamp } from "firebase/firestore";
 
 interface IFriend{
     name: string,
@@ -21,11 +21,13 @@ interface IChatHeader{
     uid : string,
     userInfo: IUserInfoHeader,
     lastMessage: string,
-    date: Date
+    date: Date,
+    unreadedMessages? : Array<string>
 }
 interface IChat{
     chatID: string,
-    user : IUserInfoHeader
+    user : IUserInfoHeader,
+    unreadedMessages: Array<string>
 }
 interface IMessage{
     id: string,
@@ -35,6 +37,20 @@ interface IMessage{
     documents: Array<string>
     images: Array<string>
 }
+interface IUnreadedMessages{
+    [messageID : string] : Array<string>
+}
+interface IChats{
+    messages : Array<IMessage> | FieldValue,
+    //unreaded : Array<IUnreadedMessages>
+}
+interface IUserChats{
+    [chatID : string] : {
+        usersInfo? : Array<IUserInfoHeader>,
+        date? : FieldValue,
+        lastMessage? : string
+    }
+}
  
 
-export type {IFriend, IUser, IUserInfoHeader, IChatHeader, IChat, IMessage}
+export type {IFriend, IUser, IUserInfoHeader, IChatHeader, IChat, IMessage, IChats, IUserChats, IUnreadedMessages}

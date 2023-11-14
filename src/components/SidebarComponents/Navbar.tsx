@@ -10,7 +10,7 @@ export default function Navbar() {
       <h2 className='navbar-app-name'>GIV Chat</h2>
       <div className='navbar-owner-box'>
         <img src={currentUser.photoURL} alt="owner" className='navbar-owner-img'/>
-        <div className='navbar-owner-name'>{currentUser.displayName}</div>
+        <div className='navbar-owner-name'>{currentUser.name}</div>
       </div>
     </div>
   )

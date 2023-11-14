@@ -7,12 +7,12 @@ import { logout } from "../../firebase/auth";
 import {login} from '../../routing';
 import {AiOutlineArrowLeft, AiOutlineArrowRight} from 'react-icons/ai'
 import Friends from './Friends';
-import { ChatContext } from '../../context/ChatContext';
-import {useContext} from 'react';
+import { IChatHeader } from '../../interfaces';
 
-export default function Sidebar() {
+export default function Sidebar({receivedChats}:{receivedChats : IChatHeader[]}) {
 
     const  [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    // const receivedChats : IChatHeader[] = useChats();
     const navigate = useNavigate();
     
     function onLogoutHandler(evt : MouseEvent<HTMLButtonElement>){
@@ -24,11 +24,13 @@ export default function Sidebar() {
         setIsSidebarOpen((currentVal) => !currentVal);
     }
 
+    console.log(receivedChats);
+
   return (
     <div className={'home-sidebar ' + (isSidebarOpen && "open")}>
         <Navbar />
-        <Search />
-        <Friends />
+        <Search receivedChats={receivedChats}/>
+        <Friends receivedChats={receivedChats}/>
         <div className="sidebar-footer">
             <button className='btn-sidebar-logout color-1' onClick={onLogoutHandler}>Logout</button>
         </div>
