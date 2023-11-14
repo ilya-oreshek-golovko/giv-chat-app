@@ -105,9 +105,7 @@ export function useFriendChatHeader(chatHeaderID : string) : IChatHeader | undef
             }
         }
 
-        return () => {
-            getFrinedChatHeader();
-        }
+        chatHeaderID && getFrinedChatHeader();
     }, [currentChat.user.uid])
 
     return friendChatHeader;
