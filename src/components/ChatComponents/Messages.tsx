@@ -37,9 +37,9 @@ export default function Messages() {
   }
 
   return (
-    <div className={'chat-main' + (currentChat == undefined ? ' empty-chat' : '')} ref={chatMainRef}>
+    <div className={'chat-main' + (!messages ? ' empty-chat' : '')} ref={chatMainRef}>
       {
-        ( !messages || !friendChatHeader?.unreadedMessages ) 
+        !messages
         ?
         <div className="chat-empty-content">Pick a friend to start a dialog</div>
         :
