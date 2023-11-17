@@ -83,8 +83,8 @@ export default function Search({receivedChats} : {receivedChats : IChatHeader[]}
         if(!chatObj.exists()) return false;
     
         if(currentChat.chatID !== chatID){
-          const unreadedMessages = receivedChats.find(chatHeader => chatHeader.uid == chatID)?.unreadedMessages;
-          if(!unreadedMessages) alert("There is an error with unreaded messages. Please contact system administrator");
+          // const unreadedMessages = receivedChats.find(chatHeader => chatHeader.uid == chatID)?.unreadedMessages;
+          // if(!unreadedMessages) alert("There is an error with unreaded messages. Please contact system administrator");
 
           setCurrentChat({
               chatID: chatID,
@@ -104,8 +104,9 @@ export default function Search({receivedChats} : {receivedChats : IChatHeader[]}
 
       const chatID = getCombinedChatID(currentUser.uid, user.uid);
       const chatObj = await getChat(chatID);
-      
-      if(isSelectedFriendAlreadyinChat(chatObj)) return;
+      console.log("Test chatObj");
+      console.log(chatObj);
+      //if(isSelectedFriendAlreadyinChat(chatObj)) return;
 
       const chat : IChats = {
         messages : []

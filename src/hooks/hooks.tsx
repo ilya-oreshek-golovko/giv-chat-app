@@ -46,7 +46,7 @@ export function useChats() : Array<IChatHeader>{
 
 export function useMessages(){
     const {currentChat} = useContext(ChatContext);
-    const [messages, setMessages] = useState<IMessage[]>();
+    const [messages, setMessages] = useState<IMessage[] | undefined>();
 
     useEffect(() => {
 

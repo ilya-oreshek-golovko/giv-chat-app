@@ -1,9 +1,10 @@
 import {MouseEventHandler} from 'react';
-import { IChatHeader } from './interfaces';
+import { IChatHeader, IMessage } from './interfaces';
 
 type FriendProps = {
     chatHeader: IChatHeader,
-    handleObjClick: MouseEventHandler<HTMLDivElement>
+    handleObjClick: MouseEventHandler<HTMLDivElement>,
+    handleRightClick?: Function
 }
 type RegisterError = {
     eUserName: string,
@@ -42,5 +43,19 @@ type TRegisterState = {
     modal: TModalView,
     input: TRegisterInput
 }
+type TContextMenu = {
+    top : number, 
+    left : number,
+    isOpen?: boolean,
+    handleEditClick?: Function,
+    handleDeleteClick: Function
+}
+type TMessage = {
+    message : IMessage, 
+    isReaded : boolean, 
+    handleMarkMessageAsReaded : Function, 
+    handleRightClick : Function,//React.MouseEventHandler<HTMLDivElement>, 
+    ContextMenuState : TContextMenu
+}
 
-export type {FriendProps, RegisterError, TDocument, TImage, InputState, TModalView, TRegisterInput, TRegisterState}
+export type {FriendProps, RegisterError, TDocument, TImage, InputState, TModalView, TRegisterInput, TRegisterState, TContextMenu, TMessage}

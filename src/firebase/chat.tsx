@@ -1,4 +1,4 @@
-import { arrayUnion, deleteField, doc, getDoc, setDoc, updateDoc, writeBatch } from "firebase/firestore";
+import { arrayUnion, deleteDoc, deleteField, doc, getDoc, setDoc, updateDoc, writeBatch } from "firebase/firestore";
 import { db } from "./firebase";
 import { IMessage, IChats, IUserChats, IUnreadedMessages, IChatHeader } from "../interfaces";
 
@@ -17,6 +17,12 @@ export async function updateChatHeader(headerID : string, headerData : any){
 export async function getChatHeader(headerID : string) : Promise<any>{
     const response = await getDoc(doc(db, "userChats", headerID));
     return response.data();
+}
+
+export async function removeChatHeader(chatHeaderID : string, chatID : string){
+    await updateDoc(doc(db, "userChats", chatHeaderID), {
+        [`${chatID}`] : deleteField()
+    });
 }
 
 export async function getChat(chatID : string){
@@ -64,10 +70,20 @@ export async function clearUnreadedMessages(chatHeaderID : string, chatID : stri
     });
 }
 
-export async function markMessageAsReaded(chatHeaderID : string, chatID : string, messageIDToDelete : string, allMessages : Array<string>){
-    const newUnreadedMessages = allMessages.filter(unreadedMessageID => unreadedMessageID !== messageIDToDelete);
+export async function removeMessageFromUnreaded(chatHeaderID : string, chatID : string, messageIDToDelete : string, allUnreadedMessages : Array<string>){
+    const newUnreadedMessages = allUnreadedMessages.filter(unreadedMessageID => unreadedMessageID !== messageIDToDelete);
     await updateDoc(doc(db, "userChats", chatHeaderID), {
         [`${chatID}.unreadedMessages`] : newUnreadedMessages
     });
 }
 
+export async function updateMessagesList(chatID : string, newMessages : Array<IMessage>){
+    await updateDoc(doc(db, "chats", chatID), { 
+        messages : newMessages
+    });
+}
+export async function removeChatMessages(chatID : string){
+    await updateDoc(doc(db, "chats", chatID), { 
+        messages : deleteField()
+    });
+}

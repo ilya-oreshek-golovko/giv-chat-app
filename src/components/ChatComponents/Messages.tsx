@@ -1,10 +1,12 @@
 import { AuthContext } from "../../context/AuthContext";
 import { ChatContext } from "../../context/ChatContext";
-import { markMessageAsReaded } from "../../firebase/chat";
+import { getChatHeader, removeMessageFromUnreaded, updateMessagesList } from "../../firebase/chat";
 import { useFriendChatHeader, useMessages } from "../../hooks/hooks";
 import { IChatHeader, IMessage } from "../../interfaces";
+import { TContextMenu } from "../../types";
+import ContextMenu from "../ContextMenu/ContextMenu";
 import Message from "./Message";
-import { useContext, useEffect } from "react";
+import { useContext, useEffect, useState } from "react";
 
 export default function Messages() {
 
@@ -13,6 +15,14 @@ export default function Messages() {
   const {messages, setMessages}= useMessages();
   const friendChatHeader : IChatHeader | undefined = useFriendChatHeader(currentChat.user.uid);
   const userChatHeader   : IChatHeader | undefined = useFriendChatHeader(currentUser.uid);
+
+  const [ContextMenuState, setContextMenuState] = useState<TContextMenu>({
+    top: 0,
+    left: 0,
+    isOpen: false,
+    handleDeleteClick: () => {},
+    handleEditClick: () => {}  
+  });
 
   useEffect(() => {
     if(!messages) return;
@@ -49,10 +59,46 @@ export default function Messages() {
     console.log(messageIDToDelete);
     if(!currentChat?.unreadedMessages) return;
 
-    markMessageAsReaded(currentUser.uid, currentChat.chatID, messageIDToDelete, currentChat.unreadedMessages);
+    removeMessageFromUnreaded(currentUser.uid, currentChat.chatID, messageIDToDelete, currentChat.unreadedMessages);
   }
-console.log(friendChatHeader);
-console.log(userChatHeader);
+
+  function handleRightClick(pageX : number, pageY : number, messageID : string, senderID : string, isSelectedMessageReaded : boolean){
+    console.log(messageID);
+
+    const handleDeleteClick = async () => {
+      
+      const checkIfMessageIsUnreaded = async () => {
+        if(!friendChatHeader?.unreadedMessages) return;
+
+        // const unreadedMessagesOfFriend : Array<string> = friendChatHeader.unreadedMessages;
+        // const isSelectedMessageUnreaded = unreadedMessagesOfFriend.some(unreadedMessageID => unreadedMessageID == messageID);
+
+        if(isSelectedMessageReaded) return;
+        removeMessageFromUnreaded(currentChat.user.uid, currentChat.chatID, messageID, friendChatHeader.unreadedMessages);
+      };
+      checkIfMessageIsUnreaded();
+
+      const newMessagesList = messages?.filter(message => message.id !== messageID);
+      if(!newMessagesList) return;
+      await updateMessagesList(currentChat.chatID, newMessagesList);
+      setContextMenuState(prevState => ({...prevState, isOpen: false}));
+    }
+    const handleEditClick = async () => {
+      console.log("Edit");
+      if(currentUser.uid !== senderID) return;
+      setContextMenuState(prevState => ({...prevState, isOpen: false}));
+    }
+
+    setContextMenuState(prevState => ({
+      top: pageX,
+      left: pageY,
+      isOpen: !prevState.isOpen,
+      handleDeleteClick,
+      handleEditClick
+    }));
+
+  }
+
   return (
     <div className={'chat-main' + (!messages ? ' empty-chat' : '')}>
       {
@@ -60,7 +106,23 @@ console.log(userChatHeader);
         ?
         <div className="chat-empty-content">Pick a friend to start a dialog</div>
         :
-        messages?.map((message) => (<Message message={message} isReaded={isMessageReaded(message.id, message.senderID)} handleMarkMessageAsReaded={handleMarkMessageAsReaded}/>))
+        messages.map((message) => (
+        <Message 
+          message={message} 
+          isReaded={isMessageReaded(message.id, message.senderID)} 
+          handleMarkMessageAsReaded={handleMarkMessageAsReaded}
+          handleRightClick={handleRightClick}
+          ContextMenuState={ContextMenuState}
+        />
+        ))
+      }
+      {
+        ContextMenuState.isOpen &&
+        <ContextMenu 
+          top={ContextMenuState.top} 
+          left={ContextMenuState.left} 
+          handleDeleteClick={ContextMenuState.handleDeleteClick} 
+          handleEditClick={ContextMenuState.handleEditClick} />
       }
     </div>
   )

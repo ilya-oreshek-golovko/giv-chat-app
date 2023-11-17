@@ -1,18 +1,25 @@
 import { FriendProps } from '../../types'
 
-export default function Friend({chatHeader, handleObjClick} : FriendProps) {
+export default function Friend({chatHeader, handleObjClick, handleRightClick} : FriendProps) {
 
-  const {lastMessage, userInfo : friendInfo, uid : key, unreadedMessages} = chatHeader;
-  const {name : friendName, photoURL : src} = friendInfo;
+  const {lastMessage, userInfo : friendInfo, uid : chatID, unreadedMessages} = chatHeader;
+  const {name : friendName, photoURL : src, uid : friendID} = friendInfo;
 
   function displayLastMessage(){
     if(!lastMessage) return "";
     return lastMessage.length > 30 ? lastMessage.substring(0, 30) + "..." : lastMessage;
   }
 
+  function handleContextClick(evt: React.MouseEvent<HTMLDivElement, MouseEvent>): void {
+    evt.preventDefault();
+    if(!handleRightClick) return;
+
+    handleRightClick(evt.pageX, evt.pageY, friendID, chatID);
+  }
+
   return (
-    <div className="home-friend">
-      <div className='friend-main-box' key={key} onClick={handleObjClick}>
+    <div className="home-friend" onContextMenu={handleContextClick}>
+      <div className='friend-main-box' key={chatID} onClick={handleObjClick}>
           <div className='friend-img-box'>
             <img src={src} alt="friend" className='friend-img'/>
           </div>
