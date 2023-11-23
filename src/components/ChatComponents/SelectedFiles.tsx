@@ -1,22 +1,18 @@
 import React, { MouseEventHandler, useContext, useState } from 'react'
-import { TDocument, TImage } from '../../types';
+import { TDocument, TImage, TModalView } from '../../types';
 import Modal from '../Modal';
 import {FcDocument} from 'react-icons/fc';
 import { SelectedFilesContext, TSelectedFilesState } from '../../context/SelectedFilesContext';
 import ViewImage from '../ViewImage';
 
-type ModalState = {
-    isModalOpen : boolean,
-    componentToRender : JSX.Element | null
-}
 export default function SelectedFiles() {
 
     const {selectedFilesState, setSelectedFiles} = useContext(SelectedFilesContext);
     const {images, documents, isOpen, clearSelectedFiles, deleteSelectedFiles} = selectedFilesState;
 
-    const [modalState, setModalState] = useState<ModalState>({
-        isModalOpen: false,
-        componentToRender: null
+    const [modalState, setModalState] = useState<TModalView>({
+        isOpen: false,
+        children: null
     });
     const listType = images.length > 0 ? "images" : "documents";
 
@@ -28,7 +24,7 @@ export default function SelectedFiles() {
     }
 
     function closeModal(){
-        setModalState({componentToRender: null, isModalOpen : false});
+        setModalState({children: null, isOpen : false});
     }
 
     function handleDeleteAction(evt : React.MouseEvent<HTMLButtonElement>) {
@@ -36,13 +32,13 @@ export default function SelectedFiles() {
         if(clearSelectedFiles) clearSelectedFiles(listType);
         closeSelectedFiles();
         closeModal();
-        //setModalState(prevState => ({...prevState, isModalOpen : false}));
+        //setModalState(prevState => ({...prevState, isOpen : false}));
     }
 
     function handleImageClick(image : TImage){
         const imageName = image.imgFile?.name || "file";
         setModalState({
-            componentToRender: (
+            children: (
                 <ViewImage 
                     imageLink={image.imgLink} 
                     handleConfirmClick={() => closeModal()}
@@ -62,14 +58,14 @@ export default function SelectedFiles() {
                     labelReject='Delete'
                 />
             ), 
-            isModalOpen : true
+            isOpen : true
         });
     }
 
     function handleDeleteClick(){
         setModalState({
-            componentToRender: <ConfirmationBox handleDeleteAction={handleDeleteAction} handleConfirmAction={() => setModalState(prevState => ({...prevState, isModalOpen : false})) }/>, 
-            isModalOpen : true
+            children: <ConfirmationBox handleDeleteAction={handleDeleteAction} handleConfirmAction={() => setModalState(prevState => ({...prevState, isOpen : false})) }/>, 
+            isOpen : true
         });
     }
 
@@ -116,9 +112,9 @@ export default function SelectedFiles() {
             }
         </div>  
         {
-            modalState.isModalOpen &&
-            <Modal isOpen={modalState.isModalOpen}>
-                {modalState.componentToRender}
+            modalState.isOpen &&
+            <Modal isOpen={modalState.isOpen}>
+                {modalState.children}
             </Modal>
         }
     </div>

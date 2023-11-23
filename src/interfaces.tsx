@@ -20,11 +20,12 @@ interface IUserInfoHeader{
 interface IChatHeader{
     uid : string,
     userInfo: IUserInfoHeader,
-    lastMessage: string,
-    date: Date,
+    lastMessage: IMessage,
+    // lastMessageDate: Date,
+    dateCreated: Timestamp,
     unreadedMessages? : Array<string>
 }
-interface IChat{
+interface IChatContext{
     chatID: string,
     user : IUserInfoHeader,
     unreadedMessages: Array<string>
@@ -37,9 +38,6 @@ interface IMessage{
     documents: Array<string>
     images: Array<string>,
     isReaded?: boolean
-}
-interface IUnreadedMessages{
-    [messageID : string] : Array<string>
 }
 interface IChats{
     messages : Array<IMessage> | FieldValue,
@@ -54,4 +52,4 @@ interface IUserChats{
 }
  
 
-export type {IFriend, IUser, IUserInfoHeader, IChatHeader, IChat, IMessage, IChats, IUserChats, IUnreadedMessages}
+export type {IFriend, IUser, IUserInfoHeader, IChatHeader, IChatContext as IChat, IMessage, IChats, IUserChats}

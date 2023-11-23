@@ -1,15 +1,13 @@
 import { AuthContext } from "../../context/AuthContext";
 import { ChatContext } from "../../context/ChatContext";
 import { SelectedFilesContext } from "../../context/SelectedFilesContext";
-import { IMessage } from "../../interfaces";
 import { useContext, useRef, useEffect, useState } from "react";
-import { TContextMenu, TDocument, TImage, TMessage } from "../../types";
+import { TDocument, TImage, TMessage } from "../../types";
 import Modal from "../Modal";
 import ViewImage from "../ViewImage";
 import {FcDocument} from 'react-icons/fc';
 import { BsCheckAll, BsCheck } from 'react-icons/bs';
 import React from "react";
-import ContextMenu from "../ContextMenu/ContextMenu";
 
 type TViewImage = {
   isViewImage : boolean,
@@ -132,7 +130,7 @@ export default function Message({message, isReaded, handleMarkMessageAsReaded, h
   function handleContextClick(evt: React.MouseEvent<HTMLDivElement, MouseEvent>): void {
     evt.preventDefault();
     if(message.senderID != currentUser.uid) return;
-    handleRightClick(evt.pageX, evt.pageY, message.id, message.senderID);
+    handleRightClick(evt.pageX, evt.pageY, message.id, message.senderID, isReaded);
   }
 
 //https://ru.w3docs.com/snippets/css/kak-mozhno-otobrazit-animirovannyi-tekst-na-izobrazhenii-pri-navedenii-myshi-s-pomoshchiu-css3.html

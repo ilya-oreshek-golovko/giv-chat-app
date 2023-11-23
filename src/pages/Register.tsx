@@ -45,7 +45,7 @@ export function Register() {
     }
 
     const {state, setState} = useStoredRegisterData();
-    console.log()
+
     const navigation = useNavigate();
 
     function resetErrors(){

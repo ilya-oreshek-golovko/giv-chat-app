@@ -1,14 +1,14 @@
 import { ChangeEvent, useContext, useRef } from 'react';
 import { BsPaperclip } from 'react-icons/bs';
 import { MdOutlineAddPhotoAlternate } from 'react-icons/md';
-import { IMessage, IUnreadedMessages, IUser, IUserChats } from '../../interfaces';
+import { IMessage, IUser } from '../../interfaces';
 import { addMessageToChat, updateChatHeader } from '../../firebase/chat';
 import { AuthContext } from '../../context/AuthContext';
 import { getDownloadURL, list, ref, uploadBytesResumable } from 'firebase/storage';
 import { storage } from '../../firebase/firebase';
 import { ChatContext } from '../../context/ChatContext';
 import { v4 as uuid } from "uuid"; 
-import { Timestamp, arrayUnion } from 'firebase/firestore';
+import { Timestamp, arrayUnion, serverTimestamp } from 'firebase/firestore';
 import WaitingSpinner from '../WaitingSpinner';
 import { SelectedFilesContext } from '../../context/SelectedFilesContext';
 import { TDocument, TImage } from '../../types';
@@ -62,7 +62,7 @@ export default function Input() {
     return true;
   }
   
-  async function saveMessage(imagesStorageLinks : Array<string>, documentsStorageLinks : Array<string>) : Promise<string>{
+  async function saveMessage(imagesStorageLinks : Array<string>, documentsStorageLinks : Array<string>) : Promise<IMessage>{
     
     const message : IMessage = {
       senderID: currentUser.uid,
@@ -80,7 +80,7 @@ export default function Input() {
     await addMessageToChat(message, chatData?.currentChat?.chatID!); 
     l("Message saved");
 
-    return message.id;
+    return message;
   }
 
   function getLastMessage(){
@@ -89,20 +89,23 @@ export default function Input() {
     return "attached"
   }
 
-  async function updateLastMessageAndUnreaded(savedMessageID : string) {
+  async function updateLastMessageAndUnreaded(savedMessage : IMessage) {
     if(!chatData.currentChat.chatID || !chatData.currentChat.user.uid){
       alert("Is is failed to update last message. Please contact system administrator");
       return;
     }
 
-    const lastMessage = getLastMessage();
+    //const lastMessage = getLastMessage();
 
     const chatHeaderFriend = {
-      [chatData.currentChat.chatID + ".lastMessage"] : lastMessage,
-      [chatData.currentChat.chatID + ".unreadedMessages"] : arrayUnion(savedMessageID)
+      [chatData.currentChat.chatID + ".lastMessage"] : savedMessage,
+      //[chatData.currentChat.chatID + ".lastMessageDate"] : serverTimestamp(),
+      [chatData.currentChat.chatID + ".unreadedMessages"] : arrayUnion(savedMessage.id)
+      //[chatData.currentChat.chatID + ".unreadedMessages"] : arrayUnion(savedMessage)
     };
     const chatHeaderCurrentUser = {
-      [chatData.currentChat.chatID + ".lastMessage"] : lastMessage
+      [chatData.currentChat.chatID + ".lastMessage"] : savedMessage,
+      //[chatData.currentChat.chatID + ".lastMessageDate"] : serverTimestamp(),
     };
 
     await updateChatHeader(currentUser.uid, chatHeaderCurrentUser);
@@ -167,8 +170,8 @@ export default function Input() {
       // l(`imagesStorageLinks : ${imagesStorageLinks.length}`);
       // l(`documentsStorageLinks : ${documentsStorageLinks.length}`);
 
-      saveMessage(imagesStorageLinks, documentsStorageLinks).then(savedMessageID => {
-        updateLastMessageAndUnreaded(savedMessageID);
+      saveMessage(imagesStorageLinks, documentsStorageLinks).then(savedMessage => {
+        updateLastMessageAndUnreaded(savedMessage);
       });
     }catch(e : any){
       l(e.message);

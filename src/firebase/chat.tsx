@@ -1,6 +1,6 @@
-import { arrayUnion, deleteDoc, deleteField, doc, getDoc, setDoc, updateDoc, writeBatch } from "firebase/firestore";
+import { arrayUnion, deleteField, doc, getDoc, setDoc, updateDoc, writeBatch } from "firebase/firestore";
 import { db } from "./firebase";
-import { IMessage, IChats, IUserChats, IUnreadedMessages, IChatHeader } from "../interfaces";
+import { IMessage, IChats, IUserChats, IChatHeader } from "../interfaces";
 
 export async function createChatHeader(userUID : string, userChats : IUserChats){
     await setDoc(doc(db, "userChats", userUID), userChats);
@@ -10,7 +10,18 @@ export async function createChatHeader(userUID : string, userChats : IUserChats)
 //         [`${chatID}.lastMessage`] : lastMessage
 //     });
 // }
+export async function updateMultipleChatHeaders(chatHeadersDate : Array<any>){
+    const batch = writeBatch(db);
+
+    for(const chatHeader of chatHeadersDate){
+        batch.update(doc(db, "userChats", chatHeader.headerID), chatHeader.headerContent);
+    }
+    // Commit the batch
+    await batch.commit();
+}
 export async function updateChatHeader(headerID : string, headerData : any){
+    console.log("headerData");
+    console.log(headerData);
     await updateDoc(doc(db, "userChats", headerID), headerData);
 }
 
@@ -23,6 +34,7 @@ export async function removeChatHeader(chatHeaderID : string, chatID : string){
     await updateDoc(doc(db, "userChats", chatHeaderID), {
         [`${chatID}`] : deleteField()
     });
+    return true;
 }
 
 export async function getChat(chatID : string){

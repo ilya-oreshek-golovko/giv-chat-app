@@ -18,7 +18,10 @@ export function AuthContextProvider({children} : {children : any}){
     const [currentUser, setCurrentUser] = useState<IUser>(defaultContextValue);
     const [isLoading, setIsLoading] = useState<boolean>(true);
 
-    function authStateChanged(user : User | null){
+    function authStateChanged(user : any){
+        // console.log("TEST GIV");
+        // console.log(user);
+        // console.log(user.displayName);
         const contextUser : IUser = {
             uid: user?.uid || "Undefined",
             name: user?.displayName || "Undefined",

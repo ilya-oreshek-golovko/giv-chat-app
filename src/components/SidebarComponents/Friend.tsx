@@ -7,7 +7,7 @@ export default function Friend({chatHeader, handleObjClick, handleRightClick} : 
 
   function displayLastMessage(){
     if(!lastMessage) return "";
-    return lastMessage.length > 30 ? lastMessage.substring(0, 30) + "..." : lastMessage;
+    return lastMessage.text.length > 30 ? lastMessage.text.substring(0, 30) + "..." : lastMessage.text;
   }
 
   function handleContextClick(evt: React.MouseEvent<HTMLDivElement, MouseEvent>): void {
@@ -19,7 +19,7 @@ export default function Friend({chatHeader, handleObjClick, handleRightClick} : 
 
   return (
     <div className="home-friend" onContextMenu={handleContextClick}>
-      <div className='friend-main-box' key={chatID} onClick={handleObjClick}>
+      <div className='friend-main-box' key={friendID} onClick={handleObjClick}>
           <div className='friend-img-box'>
             <img src={src} alt="friend" className='friend-img'/>
           </div>

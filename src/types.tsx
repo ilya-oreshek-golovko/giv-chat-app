@@ -1,10 +1,19 @@
 import {MouseEventHandler} from 'react';
-import { IChatHeader, IMessage } from './interfaces';
+import { IChatHeader, IMessage, IUser } from './interfaces';
+import { Timestamp } from 'firebase/firestore';
 
+export enum ChatHeaderType{
+    friend = "friend",
+    currentUser = "user"
+}
+type TLoginError = {
+    emailError: string,
+    passError: string
+}
 type FriendProps = {
-    chatHeader: IChatHeader,
+    chatHeader: any,
     handleObjClick: MouseEventHandler<HTMLDivElement>,
-    handleRightClick?: Function
+    handleRightClick?: (pageX : number, pageY : number, friendChatHeaderID : string, chatID : string) => void // Function
 }
 type RegisterError = {
     eUserName: string,
@@ -29,7 +38,7 @@ type InputState = {
 }
 type TModalView = {
     isOpen : boolean,
-    children : JSX.Element | null
+    children : React.ReactNode // (JSX.Element = React.ReactElement) they are more strict than React.ReactNode
 }
 type TRegisterInput = {
     userName : string,
@@ -47,15 +56,40 @@ type TContextMenu = {
     top : number, 
     left : number,
     isOpen?: boolean,
-    handleEditClick?: Function,
-    handleDeleteClick: Function
+    handleEditClick?: () => void,
+    handleDeleteClick: () => void
 }
 type TMessage = {
     message : IMessage, 
     isReaded : boolean, 
-    handleMarkMessageAsReaded : Function, 
-    handleRightClick : Function,//React.MouseEventHandler<HTMLDivElement>, 
+    handleMarkMessageAsReaded : (messageIDToDelete : string) => void, 
+    handleRightClick : (pageX : number, pageY : number, messageID : string, senderID : string, isSelectedMessageReaded : boolean) => void,//React.MouseEventHandler<HTMLDivElement>, 
     ContextMenuState : TContextMenu
 }
+type TUseMessagesManagement = {
+    creationDateUserChatHeader : Timestamp | undefined,
+    userChatHeader   : IChatHeader | undefined,
+    friendChatHeader : IChatHeader | undefined,
+    currentUser: IUser
+}
 
-export type {FriendProps, RegisterError, TDocument, TImage, InputState, TModalView, TRegisterInput, TRegisterState, TContextMenu, TMessage}
+type TUseFormManagement = {
+    isValidationFailed : (email : string | undefined, password: string | undefined) => boolean,
+    setModalView: React.Dispatch<React.SetStateAction<boolean>>
+}
+
+export type {
+    FriendProps, 
+    RegisterError, 
+    TDocument, 
+    TImage, 
+    InputState, 
+    TModalView,
+    TRegisterInput, 
+    TRegisterState, 
+    TContextMenu, 
+    TMessage, 
+    TUseMessagesManagement,
+    TLoginError,
+    TUseFormManagement
+}
