@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
-import LoadingSpinner from "../components/LoadingSpinner";
-import Modal from "../components/Modal";
+import LoadingSpinner from "../components/SpinnerComponents/LoadingSpinner";
+import Modal from "../components/PopupComponents/Modal";
 import { TLoginError, TUseFormManagement } from "../types";
 import { useNavigate } from "react-router-dom";
 import { logInWithEmailAndPassword } from "../firebase/auth";

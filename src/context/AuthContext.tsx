@@ -1,8 +1,8 @@
 import { User, onAuthStateChanged } from "firebase/auth";
 import { createContext, useEffect, useState } from "react";
 import { auth } from "../firebase/firebase";
-import LoadingSpinner from "../components/LoadingSpinner";
-import Modal from "../components/Modal";
+import LoadingSpinner from "../components/SpinnerComponents/LoadingSpinner";
+import Modal from "../components/PopupComponents/Modal";
 import { IUser } from "../interfaces";
 
 const defaultContextValue = {

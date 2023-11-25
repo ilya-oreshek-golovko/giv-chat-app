@@ -14,7 +14,7 @@ export default function Friend({chatHeader, handleObjClick, handleRightClick} : 
     evt.preventDefault();
     if(!handleRightClick) return;
 
-    handleRightClick(evt.pageX, evt.pageY, friendID, chatID);
+    handleRightClick(evt.pageY, evt.pageX, friendID, chatID);
   }
 
   return (
@@ -39,7 +39,3 @@ export default function Friend({chatHeader, handleObjClick, handleRightClick} : 
     </div>
   )
 }
-// function IsUpdateNeeded(prevState : FriendProps, nextState : FriendProps){
-//   return prevState.key === nextState.key;
-// }
-// export default memo(Friend, IsUpdateNeeded)

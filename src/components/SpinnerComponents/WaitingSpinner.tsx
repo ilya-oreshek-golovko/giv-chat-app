@@ -1,11 +1,11 @@
 import React from 'react'
 
 export default function WaitingSpinner() {
-    const getStyleObj = (elementIndex : number) => {
-        return {
-            "--index" : elementIndex
-        } as React.CSSProperties;
-    }
+  const getStyleObj = (elementIndex : number) => {
+      return {
+          "--index" : elementIndex
+      } as React.CSSProperties;
+  }
   return (
     <div className='waiting-spinner'>
         <span style={getStyleObj(1)}></span>

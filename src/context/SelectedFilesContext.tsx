@@ -1,17 +1,5 @@
-import { Dispatch, SetStateAction, createContext, useState } from "react"
-import { TDocument, TImage } from "../types"
-
-export type TSelectedFilesState = {
-    images: Array<TImage>,
-    documents: Array<TDocument>,
-    isOpen: boolean,
-    clearSelectedFiles?: Function,
-    deleteSelectedFiles?: Function
-}
-export type TSelectedFiles = {
-    selectedFilesState: TSelectedFilesState,
-    setSelectedFiles : Dispatch<SetStateAction<TSelectedFilesState>>,
-}
+import { createContext, useState } from "react"
+import { TSelectedFiles, TSelectedFilesState } from "../types"
 
 const defaultValue = {
     selectedFilesState: {

@@ -3,8 +3,8 @@ import { ChatContext } from "../../context/ChatContext";
 import { SelectedFilesContext } from "../../context/SelectedFilesContext";
 import { useContext, useRef, useEffect, useState } from "react";
 import { TDocument, TImage, TMessage } from "../../types";
-import Modal from "../Modal";
-import ViewImage from "../ViewImage";
+import Modal from "../PopupComponents/Modal";
+import ViewImage from "../PopupComponents/ViewImage";
 import {FcDocument} from 'react-icons/fc';
 import { BsCheckAll, BsCheck } from 'react-icons/bs';
 import React from "react";
@@ -14,7 +14,7 @@ type TViewImage = {
   imageLink: string
 }
 
-export default function Message({message, isReaded, handleMarkMessageAsReaded, handleRightClick} : TMessage){
+export default function Message({message, isReaded, handleMarkMessageAsReaded, handleRightClick, scrollState} : TMessage){
 
   const currentUser = useContext(AuthContext);
   const {currentChat}    = useContext(ChatContext);
@@ -30,7 +30,12 @@ export default function Message({message, isReaded, handleMarkMessageAsReaded, h
   const messageRef = useRef() as React.RefObject<HTMLDivElement>;
 
   useEffect(() => {
-    messageRef.current?.scrollIntoView();
+    if(scrollState.ScrollIntoView) messageRef.current?.scrollIntoView();
+    else if(scrollState.lastMessageinSlice?.id == message.id) {
+      console.log(scrollState.lastMessageinSlice)
+      messageRef.current?.scrollIntoView();
+    }
+  
     if(isReaded || message.senderID == currentUser.uid) return;
 
     handleMarkMessageAsReaded(message.id);
@@ -129,8 +134,10 @@ export default function Message({message, isReaded, handleMarkMessageAsReaded, h
 
   function handleContextClick(evt: React.MouseEvent<HTMLDivElement, MouseEvent>): void {
     evt.preventDefault();
+    // console.log(`top = ${evt.pageY}`);
+    // console.log(`left = ${evt.pageX}`);
     if(message.senderID != currentUser.uid) return;
-    handleRightClick(evt.pageX, evt.pageY, message.id, message.senderID, isReaded);
+    handleRightClick(evt.pageY, evt.pageX, message.id, message.senderID, isReaded);
   }
 
 //https://ru.w3docs.com/snippets/css/kak-mozhno-otobrazit-animirovannyi-tekst-na-izobrazhenii-pri-navedenii-myshi-s-pomoshchiu-css3.html

@@ -9,9 +9,9 @@ import { storage } from '../../firebase/firebase';
 import { ChatContext } from '../../context/ChatContext';
 import { v4 as uuid } from "uuid"; 
 import { Timestamp, arrayUnion, serverTimestamp } from 'firebase/firestore';
-import WaitingSpinner from '../WaitingSpinner';
+import WaitingSpinner from '../SpinnerComponents/WaitingSpinner';
 import { SelectedFilesContext } from '../../context/SelectedFilesContext';
-import { TDocument, TImage } from '../../types';
+import { InputFilesType, TDocument, TImage } from '../../types';
 import { useStoredChatFiles } from '../../hooks/hooks';
 
 const l = (mes : any) => console.log("Input: ", mes);
@@ -224,16 +224,16 @@ export default function Input() {
   }
 
   function handleModalView({images = [], documents = []} : {images? : Array<TImage>, documents? : Array<TDocument>}){
-    const clearSelectedFiles = (listType : string) => {
-      switch(listType){
-        case "images":
+    const clearSelectedFiles = (filesType : string) => {
+      switch(filesType){
+        case InputFilesType.img:
           setState(prevState => ({
             ...prevState,
             images: []
           }));
           imagesInputRef.current!.value = '';
           break;
-        case "documents":
+        case InputFilesType.doc:
           setState(prevState => ({
             ...prevState,
             documents: []
@@ -250,12 +250,12 @@ export default function Input() {
       }));
     }
 
-    const deleteSelectedFiles = (deletedImage : TImage) => {
-      const newImages = state.images.filter(image => image.imgLink !== deletedImage.imgLink);
-      setState(prevState => ({
-        ...prevState,
-        images: newImages
-      }));
+    const deleteSelectedFiles = (fileToDelete : any) => {
+      const newImages = state.images.filter(image => image.imgLink !== fileToDelete.imgLink);
+        setState(prevState => ({
+          ...prevState,
+          images: newImages
+        }));
     }
 
     setSelectedFiles({

@@ -5,7 +5,6 @@ import Login from "./pages/Login";
 import Home from "./pages/Home";
 import * as routing from './routing';
 import { AuthContext } from "./context/AuthContext";
-import Wrapper from "./components/Wrapper";
 import { useLocalStorageClearing } from "./hooks/hooks";
 
 export default function App() {

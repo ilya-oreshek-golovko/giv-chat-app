@@ -23,7 +23,7 @@ body {
   --bg-navbar: #1c2b35;
   --bg-chat-header: #3a4a55;
   --bg-message-owner: #61bbf6;
-  --bg-message-friend: white;
+  --bg-message-friend: #f0eceb;
   --bg-chat-footer: #d1d2d2;
   --txt-main: white;
   --txt-hint: #d7dadc;
@@ -430,7 +430,7 @@ button{
   cursor: pointer;
 }
 /* .color-1 {
-  background-image: linear-gradient(to right, #25aae1, #40e495, #30dd8a, #2bb673);
+  background-image: linear-gradient(to right, var(--bg-message-owner), var(--bg-chat-header), var(--bg-sidebar), var(--bg-navbar));
   box-shadow: 0 4px 15px 0 rgba(49, 196, 190, 0.75);
 } */
 .btn-sidebar-logout:hover {
@@ -869,6 +869,11 @@ button{
 }
 
 /* --------- Waiting Spinner --------- */
+.messages-wait-spinner-box{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
 .waiting-spinner{
   height: 30px;
   width: 30px;
@@ -897,7 +902,7 @@ button{
               0 0 60px var(--border-input),
               0 0 80px var(--border-input),
               0 0 100px var(--border-input);
-  animation: waiting-sp-animation 1.5s linear infinite;
+  animation: waiting-sp-animation 1s linear infinite;
   animation-delay: calc(0.1s * var(--index));
 }
 @keyframes waiting-sp-animation {

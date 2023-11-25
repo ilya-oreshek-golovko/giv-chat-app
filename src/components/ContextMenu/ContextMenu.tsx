@@ -7,9 +7,9 @@ export default function ContextMenu({top, left, handleEditClick, handleDeleteCli
       <ul>
         {
           handleEditClick &&
-          <li onClick={() => handleEditClick()}>Edit</li>
+          <li onClick={() => handleEditClick()}><span>Edit</span></li>
         }
-        <li onClick={() => handleDeleteClick()}>Delete</li>
+        <li onClick={() => handleDeleteClick()}><span>Delete</span></li>
       </ul>
     </ContextMenuDiv>
   )

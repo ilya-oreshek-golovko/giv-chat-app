@@ -1,9 +1,9 @@
 import { collection, getDocs, query, serverTimestamp, where } from 'firebase/firestore';
 import { useRef, KeyboardEvent, RefObject, useState, useContext, MouseEvent } from 'react'
 import { db } from '../../firebase/firebase';
-import { ErrorHandler } from '../../pages/Register';
+import { ErrorHandler } from '../../components/ErrorComponents/ErrorHandler';
 import Friend from './Friend';
-import { IChat, IChatHeader, IChats, IUser, IUserChats, IUserInfoHeader } from '../../interfaces';
+import { IChatHeader, IChats, IUser, IUserInfoHeader } from '../../interfaces';
 import { AuthContext } from '../../context/AuthContext';
 import { ChatContext } from '../../context/ChatContext';
 import { createChat, getChat, getChatHeader, updateChatHeader } from '../../firebase/chat';
@@ -194,15 +194,15 @@ export default function Search({receivedChats} : {receivedChats : IChatHeader[]}
       {state.users.length > 0 && 
         state.users.map(user => (
           <Friend 
-          chatHeader={{
-            userInfo: {name: user.name, photoURL: user.photoURL, uid: user.uid}
-          }} 
-          handleObjClick={
-            (evt : MouseEvent<HTMLDivElement>) => {
-              evt.preventDefault();
-              handleSelect(user);
-            }
-        } />
+            chatHeader={{
+              userInfo: {name: user.name, photoURL: user.photoURL, uid: user.uid}
+            }} 
+            handleObjClick={
+              (evt : MouseEvent<HTMLDivElement>) => {
+                evt.preventDefault();
+                handleSelect(user);
+              }
+            } />
         ))
       }
     </div>
