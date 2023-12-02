@@ -16,6 +16,7 @@ const ContextMenuDiv = styled.div<IContextMenuDiv>`
   width: 200px;
   background-color: #1c2b35;
   border-radius: .8rem;
+  box-shadow: 0px 0px 5px white;
   box-sizing: border-box;
   ${({ top, left }) => css`
     top: ${top}px;

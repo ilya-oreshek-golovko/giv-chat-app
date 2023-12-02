@@ -25,6 +25,11 @@ export async function updateChatHeader(headerID : string, headerData : any){
     await updateDoc(doc(db, "userChats", headerID), headerData);
 }
 
+/**
+ * 
+ * @param headerID 
+ * @returns !!! --- it returns all Chat Headers for the user but not specific one --- !!!
+ */
 export async function getChatHeader(headerID : string) : Promise<any>{
     const response = await getDoc(doc(db, "userChats", headerID));
     return response.data();

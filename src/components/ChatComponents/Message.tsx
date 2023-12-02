@@ -1,28 +1,35 @@
 import { AuthContext } from "../../context/AuthContext";
 import { ChatContext } from "../../context/ChatContext";
 import { SelectedFilesContext } from "../../context/SelectedFilesContext";
-import { useContext, useRef, useEffect, useState } from "react";
-import { TDocument, TImage, TMessage } from "../../types";
+import { useContext, useRef, useEffect, useState, memo } from "react";
+import { ContextEvents, TContextMenu, TDocument, TImage, TMessage } from "../../types";
 import Modal from "../PopupComponents/Modal";
 import ViewImage from "../PopupComponents/ViewImage";
 import {FcDocument} from 'react-icons/fc';
 import { BsCheckAll, BsCheck } from 'react-icons/bs';
 import React from "react";
+import { useInput } from "../../hooks/InputHooks";
+import { IMessage } from "../../interfaces";
 
 type TViewImage = {
   isViewImage : boolean,
   imageLink: string
 }
 
-export default function Message({message, isReaded, handleMarkMessageAsReaded, handleRightClick, scrollState} : TMessage){
+function Message({message, isReaded, handleMarkMessageAsReaded, handleRightClick, scrollState, ContextMenuState} : TMessage){
+
+  // console.log(`Message ${message.id}`);
 
   const currentUser = useContext(AuthContext);
   const {currentChat}    = useContext(ChatContext);
   const {setSelectedFiles} = useContext(SelectedFilesContext);
+
   const [viewImageState, setViewImageState] = useState<TViewImage>({
     isViewImage : false,
     imageLink : ""
   });
+
+  const {InputComponent, setInputText, inputText} = useInput();
 
   const imagesToView = 6;
   const docsToView = 6;
@@ -32,7 +39,6 @@ export default function Message({message, isReaded, handleMarkMessageAsReaded, h
   useEffect(() => {
     if(scrollState.ScrollIntoView) messageRef.current?.scrollIntoView();
     else if(scrollState.lastMessageinSlice?.id == message.id) {
-      console.log(scrollState.lastMessageinSlice)
       messageRef.current?.scrollIntoView();
     }
   
@@ -132,6 +138,22 @@ export default function Message({message, isReaded, handleMarkMessageAsReaded, h
     )
   }
 
+  const InputOutput = () => {
+    return(
+      ContextMenuState?.targetEvent == ContextEvents.edit
+      ?
+      InputComponent({handleConfirm : () => {}})
+      :
+      (
+        message.text &&
+        <p className={"message-content-text " + (currentUser.uid == message.senderID ? "owner-content" : "friend-content")}>
+          {message.text}
+          <CheckOutput />
+        </p>
+      )
+    )
+  }
+
   function handleContextClick(evt: React.MouseEvent<HTMLDivElement, MouseEvent>): void {
     evt.preventDefault();
     // console.log(`top = ${evt.pageY}`);
@@ -150,10 +172,7 @@ export default function Message({message, isReaded, handleMarkMessageAsReaded, h
           </div>
           <div className="message-content">
             {
-              message.text &&
-              <p className={"message-content-text " + (currentUser.uid == message.senderID ? "owner-content" : "friend-content")}>
-                {message.text}
-              </p>
+              InputOutput()
             }
             {
               message.images?.length > 0 &&
@@ -165,7 +184,6 @@ export default function Message({message, isReaded, handleMarkMessageAsReaded, h
             }
           </div>
         </div>
-        <CheckOutput />
         {
             viewImageState.isViewImage &&
             <Modal isOpen={viewImageState.isViewImage}>
@@ -179,3 +197,23 @@ export default function Message({message, isReaded, handleMarkMessageAsReaded, h
     </div>
   )
 }
+
+export default memo(Message, (prevProps : TMessage, nextProps : TMessage) => {
+  if(
+    prevProps.message != nextProps.message ||
+    prevProps.isReaded != nextProps.isReaded ||
+    prevProps.scrollState != nextProps.scrollState ||
+    (
+      prevProps.ContextMenuState.isOpen != nextProps.ContextMenuState.isOpen &&
+      (
+        nextProps.ContextMenuState.targetMessage == nextProps.message.id 
+        ||
+        [ContextEvents.edit, ContextEvents.delete].includes(nextProps.ContextMenuState.targetEvent!)
+      )
+    )
+  ){
+    return false;
+  }
+
+  return true;
+});

@@ -78,8 +78,20 @@ function useActionManagement({setModalState, clearSelectedFiles, setSelectedFile
 
 function useImagesManagement({setModalState, closeModal, deleteSelectedFiles, setSelectedFiles, images} : TUseImagesManagement){
 
+    function closeSelectedFilesForSpecificSreen(){
+        if(window.innerWidth < 960) {
+            setSelectedFiles(prevState => ({
+                ...prevState,
+                isOpen: false
+            }));
+        }
+    }
+
     function handleImageClick(image : TImage){
         const imageName = image.imgFile?.name || "file";
+
+        closeSelectedFilesForSpecificSreen();
+
         setModalState({
             children: (
                 <ViewImage 

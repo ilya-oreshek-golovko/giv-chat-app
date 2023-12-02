@@ -62,7 +62,10 @@ function useFriendsManagement({setContextMenuState, receivedChats} : TUseFriends
 
         const updateChatHeaderSelectedUser = async () => {
             const friendChatHeader = await getChatHeader(chatHeader.userInfo.uid);
-            if(friendChatHeader?.dateCreated && friendChatHeader?.userInfo) return;
+            // console.log("TEST GIV");
+            // console.log(friendChatHeader[`${chatHeader.uid}`]?.dateCreated);
+            // console.log(friendChatHeader[`${chatHeader.uid}`]?.userInfo);
+            if(friendChatHeader[`${chatHeader.uid}`]?.dateCreated && friendChatHeader[`${chatHeader.uid}`]?.userInfo) return;
             
             const currentUserInfo : IUserInfoHeader = {
                 name: currentUser.name,
@@ -78,6 +81,7 @@ function useFriendsManagement({setContextMenuState, receivedChats} : TUseFriends
         }
 
         updateChatHeaderSelectedUser();
+
         setCurrentChat({
             chatID: chatHeader.uid,
             user: chatHeader.userInfo,
@@ -89,7 +93,7 @@ function useFriendsManagement({setContextMenuState, receivedChats} : TUseFriends
         return(
             receivedChats.length > 0 &&
             receivedChats.sort((a,b) => {
-                return b.lastMessage.date > a.lastMessage.date ? 1 : -1
+                return b.lastMessage?.date > a.lastMessage?.date ? 1 : -1
             }).map((chatHeader : IChatHeader) => (
                 <Friend 
                     chatHeader={chatHeader}

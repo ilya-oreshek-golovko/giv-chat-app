@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import ContextMenu from "../components/ContextMenu/ContextMenu";
-import { TContextMenu, TMessage, TMessagesState, TScrollIntoViewMessages, TUseMessageClickManagement, TUseMessagesManagement } from "../types";
+import { ContextEvents, TContextMenu, TMessage, TMessagesState, TScrollIntoViewMessages, TUseMessageClickManagement, TUseMessagesManagement } from "../types";
 import { IChatHeader, IMessage } from "../interfaces";
 import { removeMessageFromUnreaded, updateChatHeader, updateMessagesList } from "../firebase/chat";
 import { doc, onSnapshot } from "firebase/firestore";
@@ -13,19 +13,21 @@ function useContextMenuManagement(){
         top: 0,
         left: 0,
         isOpen: false,
+        targetMessage: undefined,
+        targetEvent: undefined,
         handleDeleteClick: () => {},
         handleEditClick: () => {}  
     }
     const [ContextMenuState, setContextMenuState] = useState<TContextMenu>(defaultContextMenuState);
 
     useEffect(() => {
-        window.addEventListener("click", handleMessageBoxClick);
+        window.addEventListener("click", closeContextMenu);
         return () => {
-            window.removeEventListener("click", handleMessageBoxClick);
+            window.removeEventListener("click", closeContextMenu);
         }
     }, [])
 
-    function handleMessageBoxClick(){
+    function closeContextMenu(){
         setContextMenuState(defaultContextMenuState);
     }
 
@@ -96,21 +98,22 @@ function useMessagesManagement(
     }
 
     function MessagesList(handleRightClick : TMessage["handleRightClick"], ContextMenuState : TContextMenu){
-
+        console.log(`messagesState.visibleMessages`);
+        console.log(messagesState.visibleMessages);
         return(
             !currentChat.chatID
             ?
             <div className="chat-empty-content">Pick a friend to start a dialog</div>
             :
             messagesState.visibleMessages.map((message) => (
-            <Message 
-                message={message} 
-                isReaded={isMessageReaded(message.id, message.senderID)} 
-                handleMarkMessageAsReaded={handleMarkMessageAsReaded}
-                handleRightClick={handleRightClick}
-                ContextMenuState={ContextMenuState}
-                scrollState={scrollState}
-            />
+                <Message 
+                    message={message} 
+                    isReaded={isMessageReaded(message.id, message.senderID)} 
+                    handleMarkMessageAsReaded={handleMarkMessageAsReaded}
+                    handleRightClick={handleRightClick}
+                    ContextMenuState={ContextMenuState}
+                    scrollState={scrollState}
+                />
             ))
         )
     }
@@ -160,6 +163,8 @@ function useMessagesManagement(
                 const response : IMessage[] = document.exists() && 
                 document.data()["messages"]
                 ?.reduce((validMessages : IMessage[], message : IMessage) => { 
+                    // console.log(creationDateUserChatHeader!.toDate());
+                    // console.log(message.date.toDate());
                     if(message.date.toDate() > creationDateUserChatHeader!.toDate()){
                         validMessages.push({
                             senderID: message.senderID,
@@ -174,11 +179,19 @@ function useMessagesManagement(
                     return validMessages;
                 }, []);
 
+                console.log("TEST response");
+                console.log(response);
+
                 if(response.length > 0){
                     SetScrollState({ScrollIntoView: true, lastMessageinSlice: undefined});
                     setMessagesState({
                         allMessages: response,
                         visibleMessages : response.slice(-MessagesPerSlice)
+                    });
+                }else{
+                    setMessagesState({
+                        allMessages: [],
+                        visibleMessages : []
                     });
                 }
             });
@@ -210,35 +223,44 @@ function useMessageClickManagement({userChatHeader, friendChatHeader, currentCha
     function handleRightClick(pageX : number, pageY : number, messageID : string, senderID : string, isSelectedMessageReaded : boolean){
         
         const handleDeleteClick = async () => {
-          const deleteSelectedMessageFromUnreaded = async () => {
-            if(!friendChatHeader?.unreadedMessages) return;
-    
-            if(isSelectedMessageReaded) return;
-            removeMessageFromUnreaded(currentChat.user.uid, currentChat.chatID, messageID, friendChatHeader.unreadedMessages);
-          };
-          const removeSelectedMessage = () => {
-            const newMessagesList = messages.filter(message => message.id !== messageID);
-            updateMessagesList(currentChat.chatID, newMessagesList);
-            return newMessagesList;
-          }
-    
-          deleteSelectedMessageFromUnreaded();
-          const newMessagesList = removeSelectedMessage();
-          updateLastMessage(newMessagesList, messageID);
-    
-          setContextMenuState(prevState => ({...prevState, isOpen: false}));
+            try{
+                const deleteSelectedMessageFromUnreaded = async () => {
+                    if(!friendChatHeader?.unreadedMessages) return;
+        
+                    if(isSelectedMessageReaded) return;
+                    removeMessageFromUnreaded(currentChat.user.uid, currentChat.chatID, messageID, friendChatHeader.unreadedMessages);
+                };
+                const removeSelectedMessage = () => {
+                    const newMessagesList = messages.filter(message => message.id !== messageID);
+                    updateMessagesList(currentChat.chatID, newMessagesList);
+                    return newMessagesList;
+                }
+        
+                deleteSelectedMessageFromUnreaded();
+                const newMessagesList = removeSelectedMessage();
+                updateLastMessage(newMessagesList, messageID);
+        
+                setContextMenuState(prevState => ({...prevState, isOpen: false, targetEvent: ContextEvents.delete}));
+            }catch(e){
+                setContextMenuState(prevState => ({...prevState, isOpen: false, targetEvent: undefined}));
+            }
         }
         
         const handleEditClick = async () => {
-          console.log("Edit");
-          if(currentUser.uid !== senderID) return;
-          setContextMenuState(prevState => ({...prevState, isOpen: false}));
+            try{
+                if(currentUser.uid !== senderID) return;
+                setContextMenuState(prevState => ({...prevState, isOpen: false, targetEvent: ContextEvents.edit}));
+            }catch(e){
+                setContextMenuState(prevState => ({...prevState, isOpen: false, targetEvent: undefined}));
+            }
         }
     
         setContextMenuState({
           top: pageX,
           left: pageY,
           isOpen: true,
+          targetMessage: messageID,
+          targetEvent: undefined,
           handleDeleteClick,
           handleEditClick
         });
@@ -271,8 +293,6 @@ function useMessageClickManagement({userChatHeader, friendChatHeader, currentCha
         handleRightClick
     }
 }
-
-
 
 export {
     useContextMenuManagement,

@@ -1,4 +1,4 @@
-import { useContext, useEffect, useMemo, useRef, useState } from "react";
+import { Dispatch, SetStateAction, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { AuthContext } from "../context/AuthContext";
 import { IChat, IChatHeader, IMessage } from "../interfaces";
 import { doc, onSnapshot } from "firebase/firestore";
@@ -126,14 +126,11 @@ function clearLocalStorage(){
     localStorage.clear();
 }
 
-export function useStoredChatFiles(chat : ChatType | undefined, delay : number = 800){
-    const defaultValue = {
-        text: "",
-        images : [],
-        documents: [],
-        isSendClicked : false
-    }
-    const [state, setState] = useState<InputState>(defaultValue);
+export function useStoredChatFiles({inputText, setInputText} : {inputText : string, setInputText : Dispatch<SetStateAction<string>>}){
+
+    const {currentChat} = useContext(ChatContext);
+    const delay = 800;
+    
     // const getStoredChatFils = () => {
     //     if(!chat?.currentChat?.chatID && !localStorage.getItem(chat?.currentChat?.chatID!)) return;
     //     console.log(JSON.parse(localStorage.getItem(chat?.currentChat?.chatID!)!));
@@ -141,27 +138,27 @@ export function useStoredChatFiles(chat : ChatType | undefined, delay : number =
     // }
     // console.log("TEST useStoredChatFiles");
     // getStoredChatFils();
-    function saveFilesLocaly(newState : InputState){
-        if(!chat?.currentChat?.chatID) return;
+    function saveFilesLocaly(){
+        if(!currentChat.chatID) return;
         // console.log(JSON.stringify(newState));
-        localStorage.setItem(chat?.currentChat?.chatID, JSON.stringify(newState))
+        localStorage.setItem(currentChat?.chatID, inputText)
     }
     useEffect(() => {
-        if(!chat?.currentChat?.chatID) return;
+        if(!currentChat?.chatID) return;
         
-        const storedFiles = localStorage.getItem(chat?.currentChat?.chatID!);
+        const storedFiles = localStorage.getItem(currentChat.chatID);
 
-        if(!storedFiles) setState(defaultValue);
-        else setState(JSON.parse(storedFiles));
+        if(storedFiles) setInputText(JSON.parse(storedFiles))
+        // if(!storedFiles) setState(defaultValue);
+        // else setState(JSON.parse(storedFiles));
 
-    }, [chat?.currentChat?.chatID])
+    }, [currentChat.chatID])
 
     useEffect(() => {
-        const handler = setTimeout(() => saveFilesLocaly(state), delay);
+        const handler = setTimeout(() => saveFilesLocaly(), delay);
         return () => clearTimeout(handler);
-    }, [state.text, state.documents, state.images, delay])
+    }, [inputText, delay])
 
-    return {state, setState};
 }
 
 

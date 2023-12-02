@@ -5,7 +5,7 @@ import { IChatHeader } from '../interfaces';
 import { useChats } from '../hooks/hooks';
 
 export default function Home() {
-  // const currentUser = useContext(AuthContext);
+  
   const receivedChats : IChatHeader[] = useChats();
   
   return (

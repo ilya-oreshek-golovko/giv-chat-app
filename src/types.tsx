@@ -1,4 +1,4 @@
-import {MouseEventHandler, SetStateAction} from 'react';
+import {Dispatch, MouseEventHandler, SetStateAction} from 'react';
 import { IChat, IChatHeader, IMessage, IUser } from './interfaces';
 import { Timestamp } from 'firebase/firestore';
 
@@ -19,6 +19,11 @@ export enum RegisterErrors{
 export enum InputFilesType{
     img = "images",
     doc = "document"
+}
+
+export enum ContextEvents{
+    edit = "edit-click",
+    delete = "delete-click" 
 }
 
 type TLoginError = {
@@ -71,6 +76,8 @@ type TContextMenu = {
     top : number, 
     left : number,
     isOpen?: boolean,
+    targetMessage? : string, 
+    targetEvent? : ContextEvents.edit | ContextEvents.delete | undefined,
     handleEditClick?: () => void,
     handleDeleteClick: () => void
 }
@@ -151,6 +158,27 @@ type TUseFriendsManagement = {
     setContextMenuState : React.Dispatch<SetStateAction<TContextMenu>>,
     receivedChats: IChatHeader[]
 }
+type TUseSendManagement = {
+    imgManagement : {
+        images: TImage[],
+        setImages: Dispatch<SetStateAction<TImage[]>>
+    },
+    docManagement: {
+        documents: TDocument[],
+        setDocuments: Dispatch<SetStateAction<TDocument[]>>
+    },
+    txtManagement: {
+        inputText: string,
+        setInputText: Dispatch<SetStateAction<string>>
+    }
+}
+
+type TUseInputModalManagement = {
+    setImages: Dispatch<SetStateAction<TImage[]>>
+    setDocuments: Dispatch<SetStateAction<TDocument[]>>
+    docRef: React.RefObject<HTMLInputElement>,
+    imgRef: React.RefObject<HTMLInputElement>
+}
 
 export type {
     FriendProps, 
@@ -175,5 +203,7 @@ export type {
     TUseMessageClickManagement,
     TMessagesState,
     TScrollIntoViewMessages,
-    TUseFriendsManagement
+    TUseFriendsManagement,
+    TUseSendManagement,
+    TUseInputModalManagement
 }
